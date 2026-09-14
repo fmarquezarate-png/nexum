@@ -104,3 +104,45 @@ lo muestra grande, se notarán algo blandos**.
 No es urgente y no bloquea nada. Antes de publicar en las tiendas conviene
 conseguir los símbolos a 1024 px reales, o redibujarlos como vector. Mientras
 tanto, lo que hay sirve perfectamente.
+
+---
+
+## Las mascotas
+
+Una por marca. Están en `originales/mascotas-originales.png`.
+
+| Mascota | Marca | Qué es | Su frase |
+|---|---|---|---|
+| **Nexi** | Nexum | Robotito blanco con un brote en la cabeza | *"Siempre contigo. Un hogar más simple."* |
+| **Airi** | Coolio | Nubecita con un remolino de aire | *"Tu clima, donde estés."* |
+| **Broti** | Plantico | Brote con hojas | *"Plantas felices, personas más felices."* |
+
+### Para qué se van a usar
+
+No son decoración suelta: resuelven los momentos en los que una pantalla vacía
+resulta fría o confusa.
+
+| Dónde | Quién aparece |
+|---|---|
+| Asistente de alta de casa | **Nexi**, guiando cada paso |
+| "Todavía no tienes dispositivos" | **Nexi** |
+| Pantalla de un aire sin configurar | **Airi** |
+| Plantico, cuando llegue | **Broti** |
+| Errores con los que no se puede hacer nada | **Nexi** |
+
+### Qué falta para poder usarlas
+
+**La imagen actual no sirve para meterla en la app.** Las tres mascotas están
+sobre una foto de una habitación, con sombras y plantas de fondo. Recortarlas
+automáticamente saldría mal: son blancas sobre una mesa blanca, así que ningún
+recorte por color las separa bien.
+
+Hace falta **un archivo por mascota, con fondo transparente**, PNG, mínimo
+1024 px de alto. Se suben a `originales/` con estos nombres:
+
+- `nexi.png`
+- `airi.png`
+- `broti.png`
+
+Mientras no estén, la app funciona igual: los huecos donde irían quedan con el
+texto, sin el dibujo.
