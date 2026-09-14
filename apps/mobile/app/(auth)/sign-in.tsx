@@ -1,11 +1,90 @@
-import { Screen, Placeholder } from '@/ui';
-import { t } from '@/lib/i18n';
+import { Link, router } from 'expo-router';
+import { useState } from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
-/** Login con email y contraseña. OAuth (Google/Apple) queda para más adelante. */
+import { useAuth } from '@/core/auth';
+import { t } from '@/lib/i18n';
+import { Button, Screen, TextField, colors, spacing, typography } from '@/ui';
+
 export default function SignInScreen() {
+  const { entrar } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [cargando, setCargando] = useState(false);
+
+  async function alEntrar() {
+    setError(null);
+    if (!email.trim()) return setError(t('auth.faltaEmail'));
+    if (!password) return setError(t('auth.faltaPassword'));
+
+    setCargando(true);
+    const { error: fallo } = await entrar(email, password);
+    setCargando(false);
+
+    if (fallo) setError(fallo);
+    else router.replace('/');
+  }
+
   return (
-    <Screen title={t('auth.signIn')} subtitle={t('app.tagline')}>
-      <Placeholder phase="Fase 1" what="Formulario de correo y contraseña" />
+    <Screen>
+      <View style={styles.cabecera}>
+        <Image
+          source={require('../../assets/icon.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.titulo}>{t('auth.bienvenida')}</Text>
+        <Text style={styles.lema}>{t('app.tagline')}</Text>
+      </View>
+
+      <View style={styles.formulario}>
+        <TextField
+          label={t('auth.email')}
+          placeholder={t('auth.emailPlaceholder')}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          inputMode="email"
+        />
+        <TextField
+          label={t('auth.password')}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoComplete="current-password"
+          error={error}
+          onSubmitEditing={alEntrar}
+          returnKeyType="go"
+        />
+
+        <Button label={t('auth.signIn')} onPress={alEntrar} cargando={cargando} />
+
+        <Link href="/(auth)/forgot-password" style={styles.enlace}>
+          {t('auth.forgotPassword')}
+        </Link>
+      </View>
+
+      <View style={styles.pie}>
+        <Text style={styles.pieTexto}>{t('auth.noAccount')}</Text>
+        <Link href="/(auth)/sign-up" style={styles.enlaceFuerte}>
+          {t('auth.signUp')}
+        </Link>
+      </View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  cabecera: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xl },
+  logo: { width: 88, height: 88, borderRadius: 20, marginBottom: spacing.sm },
+  titulo: { ...typography.title, color: colors.text, textAlign: 'center' },
+  lema: { ...typography.body, color: colors.textMuted },
+  formulario: { gap: spacing.lg },
+  enlace: { ...typography.caption, color: colors.brand, textAlign: 'center', paddingVertical: spacing.sm },
+  pie: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xs, paddingTop: spacing.xl },
+  pieTexto: { ...typography.body, color: colors.textMuted },
+  enlaceFuerte: { ...typography.bodyStrong, color: colors.brand },
+});

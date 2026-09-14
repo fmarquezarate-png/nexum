@@ -248,16 +248,20 @@ Léelos en este orden:
 | Fase | Qué incluye | Estado |
 |---|---|---|
 | **0 · Esqueleto** | Monorepo, esquema con RLS, contratos, app navegando | ✅ Hecho |
-| **1 · Núcleo** | Registro, login, casas, habitaciones, miembros, códigos QR | ⬜ Siguiente |
-| **2 · Coolio** | Emparejado real, comandos con auditoría, telemetría en vivo | ⬜ |
+| **1 · Núcleo** | Registro, login, casas, habitaciones, miembros, códigos QR | ✅ Hecho |
+| **2 · Coolio** | Emparejado real, comandos con auditoría, telemetría en vivo | ⬜ Siguiente |
 | **3 · Automatizaciones** | Horarios, umbrales, notificaciones, estadísticas | ⬜ |
 | **4 · Plantico** | Riego. La prueba de que el núcleo está bien hecho | ⬜ |
 
-**Lo que hay ahora:** toda la estructura, el esquema completo de la base de
-datos con las reglas de seguridad activas, los contratos cerrados y la app
-arrancando con sus cinco pestañas. Las pantallas están maquetadas con tarjetas
-que indican qué falta y en qué fase llega. Las Edge Functions y el servicio
-`mqtt-bridge` son esqueletos que devuelven "no implementado" a propósito.
+**Lo que funciona ahora:** crear cuenta, iniciar sesión, recuperar contraseña,
+el asistente de alta de casa, gestionar casas, habitaciones y miembros, y
+generar y canjear códigos de invitado con su QR.
+
+**Lo que todavía no:** los dispositivos. La pestaña de Dispositivos enseña el
+selector de casa y un hueco, porque hasta la fase 2 no se puede emparejar nada.
+Las pantallas de Automatizaciones y Estadísticas están maquetadas con tarjetas
+que indican qué falta y en qué fase llega. El servicio `mqtt-bridge` y las Edge
+Functions son esqueletos a propósito.
 
 ---
 

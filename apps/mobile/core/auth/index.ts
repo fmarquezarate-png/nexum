@@ -1,2 +1,1 @@
-// Módulo de núcleo: auth. Estructura creada, implementación en fases posteriores.
-export {};
+export { AuthProvider, useAuth } from './AuthProvider';

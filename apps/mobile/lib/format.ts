@@ -29,3 +29,24 @@ export function celsius(value: number | null | undefined): string {
 export function percent(value: number | null | undefined): string {
   return value == null ? '—' : `${Math.round(value)} %`;
 }
+
+/** "12 de septiembre a las 18:30" */
+export function fechaLarga(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const dia = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+  const hora = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  return `${dia} a las ${hora}`;
+}
+
+/** "12 sept 18:30" — versión corta para listas. */
+export function fechaCorta(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}

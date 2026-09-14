@@ -1,7 +1,22 @@
 {
   "app": {
     "name": "Nexum",
-    "tagline": "Tu hogar, más simple."
+    "tagline": "Tu hogar, más simple.",
+    "cargando": "Cargando…"
+  },
+  "acciones": {
+    "continuar": "Continuar",
+    "guardar": "Guardar",
+    "cancelar": "Cancelar",
+    "volver": "Volver",
+    "anadir": "Añadir",
+    "borrar": "Borrar",
+    "saltar": "Saltar este paso",
+    "masTarde": "Más tarde",
+    "copiar": "Copiar",
+    "copiado": "Copiado",
+    "reintentar": "Reintentar",
+    "cerrar": "Cerrar"
   },
   "tabs": {
     "home": "Inicio",
@@ -11,13 +26,51 @@
     "settings": "Ajustes"
   },
   "auth": {
+    "bienvenida": "Bienvenido a Nexum",
     "signIn": "Iniciar sesión",
     "signUp": "Crear cuenta",
     "forgotPassword": "He olvidado mi contraseña",
+    "nombre": "Tu nombre",
+    "nombrePlaceholder": "Fran",
     "email": "Correo electrónico",
+    "emailPlaceholder": "tu@correo.com",
     "password": "Contraseña",
+    "passwordAyuda": "Mínimo 6 caracteres.",
     "noAccount": "¿Todavía no tienes cuenta?",
-    "hasAccount": "¿Ya tienes cuenta?"
+    "hasAccount": "¿Ya tienes cuenta?",
+    "recuperarTitulo": "Recuperar contraseña",
+    "recuperarExplicacion": "Te enviamos un correo con un enlace para poner una contraseña nueva.",
+    "recuperarEnviado": "Si existe una cuenta con ese correo, ya está enviado. Revisa tu bandeja.",
+    "salir": "Cerrar sesión",
+    "faltaEmail": "Escribe tu correo.",
+    "faltaPassword": "Escribe tu contraseña.",
+    "faltaNombre": "Escribe tu nombre.",
+    "passwordCorta": "La contraseña debe tener al menos 6 caracteres."
+  },
+  "onboarding": {
+    "paso": "Paso {{n}} de {{total}}",
+    "casaTitulo": "¿Cómo se llama tu casa?",
+    "casaNexi": "¡Hola! Soy Nexi. Vamos a preparar tu hogar en un momento.",
+    "casaLabel": "Nombre de la casa",
+    "casaPlaceholder": "Mi casa",
+    "casaAyuda": "Puedes cambiarlo cuando quieras.",
+    "habitacionesTitulo": "¿Qué habitaciones tiene?",
+    "habitacionesNexi": "Toca las que tengas. Sirven para saber dónde está cada aparato.",
+    "habitacionOtra": "Otra habitación",
+    "habitacionNueva": "Nombre de la habitación",
+    "dispositivoTitulo": "¿Añadimos tu primer dispositivo?",
+    "dispositivoNexi": "Ya está tu casa lista. Cuando tengas un aparato a mano, lo damos de alta.",
+    "dispositivoAhora": "Añadir ahora",
+    "creando": "Creando tu casa…",
+    "errorCrear": "No se ha podido crear la casa. Inténtalo otra vez."
+  },
+  "habitaciones": {
+    "salon": "Salón",
+    "dormitorio": "Dormitorio",
+    "cocina": "Cocina",
+    "despacho": "Despacho",
+    "bano": "Baño",
+    "terraza": "Terraza"
   },
   "home": {
     "greeting": "¡Hola, {{name}}!",
@@ -31,6 +84,97 @@
     "night": "Noche",
     "away": "Fuera",
     "eco": "Eco"
+  },
+  "dispositivos": {
+    "vacioTitulo": "Todavía no hay dispositivos",
+    "vacioTexto": "Cuando conectes tu primer aparato, aparecerá aquí con su estado en vivo.",
+    "anadir": "Añadir dispositivo",
+    "sinHabitacion": "Sin habitación"
+  },
+  "casas": {
+    "titulo": "Mis casas",
+    "vaciaTitulo": "Todavía no tienes ninguna casa",
+    "vaciaTexto": "Una casa agrupa tus habitaciones y tus aparatos. Es lo primero que hay que crear.",
+    "crear": "Crear una casa",
+    "nueva": "Casa nueva",
+    "nombre": "Nombre de la casa",
+    "selector": "Casa",
+    "habitaciones": "Habitaciones",
+    "habitacionesVacias": "Esta casa todavía no tiene habitaciones.",
+    "miembros": "Miembros",
+    "codigos": "Códigos de invitado",
+    "salirDeCasa": "Salir de esta casa",
+    "borrarCasa": "Borrar esta casa",
+    "borrarAviso": "Se borrarán también sus habitaciones, sus dispositivos y su historial. No se puede deshacer."
+  },
+  "roles": {
+    "owner": "Propietario",
+    "admin": "Administrador",
+    "member": "Miembro",
+    "guest": "Invitado",
+    "controller": "Puede controlar",
+    "viewer": "Solo ver"
+  },
+  "miembros": {
+    "tu": "Tú",
+    "caduca": "Caduca {{fecha}}",
+    "permanente": "Acceso permanente",
+    "expulsar": "Quitar de la casa",
+    "soloAdmin": "Solo los propietarios y administradores pueden gestionar miembros."
+  },
+  "codigos": {
+    "titulo": "Códigos de invitado",
+    "explicacion": "Un código deja entrar a alguien en tu casa durante el tiempo que tú decidas. Caduca siempre.",
+    "crear": "Crear un código",
+    "duracion": "¿Cuánto tiempo será válido?",
+    "queRol": "¿Qué podrá hacer?",
+    "rolMember": "Miembro · puede controlar los aparatos",
+    "rolGuest": "Invitado · solo puede mirar",
+    "creado": "Código creado",
+    "compartir": "Comparte este código o enseña el QR.",
+    "caducaEl": "Caduca el {{fecha}}",
+    "vacioTitulo": "Todavía no has creado ningún código",
+    "vacioTexto": "Crea uno cuando quieras dar acceso a alguien.",
+    "revocar": "Desactivar",
+    "revocarAviso": "Desactivar un código impide que se use a partir de ahora, pero no expulsa a quien ya entró con él.",
+    "usos": "{{usos}} usos",
+    "estado": {
+      "activo": "Activo",
+      "caducado": "Caducado",
+      "revocado": "Desactivado",
+      "agotado": "Sin usos"
+    },
+    "canjearTitulo": "Tengo un código",
+    "canjearExplicacion": "Escribe el código que te han dado para entrar en su casa.",
+    "canjearLabel": "Código",
+    "canjearPlaceholder": "NEXUM-XXXXXX",
+    "canjearBoton": "Entrar",
+    "canjeOk": "¡Listo! Ya tienes acceso.",
+    "canjeOkCaduca": "Tu acceso caduca el {{fecha}}."
+  },
+  "errores": {
+    "not_found": "Este código no es válido. Revisa que lo has escrito bien.",
+    "expired": "Este código ha caducado.",
+    "revoked": "El propietario ha desactivado este código.",
+    "exhausted": "Este código ya se ha usado el número máximo de veces.",
+    "already_member": "Ya tienes acceso a esta casa.",
+    "forbidden": "No tienes permiso para hacer esto.",
+    "invalid_scope": "Este código está mal configurado.",
+    "expiry_in_past": "La fecha de caducidad ya ha pasado.",
+    "code_generation_failed": "No se ha podido generar el código. Inténtalo otra vez.",
+    "not_authenticated": "Tienes que iniciar sesión.",
+    "generico": "Algo no ha ido bien. Inténtalo otra vez.",
+    "sinConexion": "No hay conexión con el servidor.",
+    "deviceOffline": "El dispositivo está sin conexión."
+  },
+  "ajustes": {
+    "perfil": "Perfil",
+    "nombreVisible": "Nombre visible",
+    "correo": "Correo",
+    "casas": "Casas",
+    "tengoCodigo": "Tengo un código de invitación",
+    "acercaDe": "Acerca de Nexum",
+    "version": "Versión {{v}}"
   },
   "device": {
     "online": "Conectado",
@@ -55,14 +199,5 @@
     "timer": "Temporizador",
     "indoorTemp": "Interior",
     "humidity": "Humedad"
-  },
-  "errors": {
-    "codeNotFound": "Este código no es válido.",
-    "codeExpired": "Este código ha caducado.",
-    "codeRevoked": "El propietario ha desactivado este código.",
-    "codeExhausted": "Este código ya se ha usado el número máximo de veces.",
-    "alreadyMember": "Ya tienes acceso a esta casa.",
-    "noPermission": "No tienes permiso para controlar este dispositivo.",
-    "deviceOffline": "El dispositivo está sin conexión."
   }
 }

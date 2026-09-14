@@ -11,6 +11,10 @@
   "engines": {
     "node": ">=20"
   },
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
   "scripts": {
     "app": "npm run start --workspace apps/mobile",
     "bridge": "npm run dev --workspace services/mqtt-bridge",
