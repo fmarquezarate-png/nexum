@@ -239,6 +239,7 @@ Léelos en este orden:
 | [`docs/permissions.md`](docs/permissions.md) | Quién puede qué, y por qué la seguridad vive en la base de datos |
 | [`docs/provisioning.md`](docs/provisioning.md) | Cómo se empareja un aparato nuevo |
 | [`docs/adding-a-module.md`](docs/adding-a-module.md) | Cómo añadir Plantico sin romper nada |
+| [`docs/despliegue.md`](docs/despliegue.md) | Cómo se publica la app y qué mirar cuando no se actualiza |
 | [`packages/contracts/`](packages/contracts/) | El contrato con los dispositivos |
 
 ---
