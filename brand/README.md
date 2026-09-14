@@ -130,19 +130,17 @@ resulta fría o confusa.
 | Plantico, cuando llegue | **Broti** |
 | Errores con los que no se puede hacer nada | **Nexi** |
 
-### Qué falta para poder usarlas
+### Archivos listos
 
-**La imagen actual no sirve para meterla en la app.** Las tres mascotas están
-sobre una foto de una habitación, con sombras y plantas de fondo. Recortarlas
-automáticamente saldría mal: son blancas sobre una mesa blanca, así que ningún
-recorte por color las separa bien.
+Las tres vienen con **fondo transparente**, recortadas automáticamente a su
+silueta, centradas en lienzo cuadrado con un pequeño margen y a 1024 × 1024.
 
-Hace falta **un archivo por mascota, con fondo transparente**, PNG, mínimo
-1024 px de alto. Se suben a `originales/` con estos nombres:
+| Archivo | Original |
+|---|---|
+| `mascotas/nexi.png` | `originales/nexi-original.png` |
+| `mascotas/airi.png` | `originales/airi-original.png` |
+| `mascotas/broti.png` | `originales/broti-original.png` |
 
-- `nexi.png`
-- `airi.png`
-- `broti.png`
-
-Mientras no estén, la app funciona igual: los huecos donde irían quedan con el
-texto, sin el dibujo.
+En `apps/mobile/assets/mascotas/` está la misma copia a **512 px**, que es la
+que usa la app: en pantalla nunca se muestran más grandes que unos 200 px, y un
+archivo de 1024 pesaría cuatro veces más sin verse mejor.
