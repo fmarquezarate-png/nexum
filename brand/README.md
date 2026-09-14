@@ -56,3 +56,51 @@ Son dos usos distintos y no se pueden sustituir:
 
 Los colores de la marca ya están recogidos como código en
 `apps/mobile/ui/tokens.ts`, tomados de estos logos.
+
+---
+
+## Lo que ya está generado
+
+A partir de `originales/`, extraído automáticamente detectando los bloques por
+el canal de transparencia (no a ojo):
+
+### `iconos/` — solo el símbolo, 1024 × 1024, opacos
+
+| Archivo | Fondo |
+|---|---|
+| `nexum-icono.png` | crema `#F2EFE6` |
+| `coolio-icono.png` | azul claro `#DFEFFA` |
+| `plantico-icono.png` | crema `#F4F1EA` |
+
+Van **sin transparencia** a propósito: el icono de una app de iOS no puede
+llevar canal alfa, la App Store lo rechaza.
+
+### `completos/` — símbolo + palabra + lema
+
+A resolución nativa, con transparencia. Para cabeceras y pantallas de bienvenida.
+
+### `apps/mobile/assets/` — lo que consume la app
+
+| Archivo | Tamaño | Dónde se ve |
+|---|---|---|
+| `icon.png` | 1024 × 1024 | Icono en iOS y Android |
+| `adaptive-icon.png` | 1024 × 1024 | Icono adaptativo de Android |
+| `favicon.png` | 48 × 48 | Pestaña del navegador |
+| `splash.png` | 2048 × 2048 | Pantalla de carga |
+
+**Sobre el icono adaptativo de Android:** Android recorta el 33 % exterior del
+icono para poder darle forma de círculo, cuadrado o gota según el móvil. Por eso
+el símbolo va reducido al 66 % central, sobre fondo transparente, y el color de
+relleno se declara aparte en `app.json`. Si se pusiera el símbolo a tamaño
+completo, en muchos móviles saldría cortado.
+
+## Limitación conocida del material actual
+
+Los símbolos venían a **440 × 440 px** dentro de la imagen original, y se han
+ampliado a 1024 para cumplir el mínimo de las tiendas. En el móvil se ven bien
+(ahí el icono se muestra a 60-180 px), pero **en la ficha de la App Store, que
+lo muestra grande, se notarán algo blandos**.
+
+No es urgente y no bloquea nada. Antes de publicar en las tiendas conviene
+conseguir los símbolos a 1024 px reales, o redibujarlos como vector. Mientras
+tanto, lo que hay sirve perfectamente.
