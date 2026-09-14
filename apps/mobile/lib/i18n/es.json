@@ -64,7 +64,8 @@
     "dispositivoNexi": "Ya está tu casa lista. Cuando tengas un aparato a mano, lo damos de alta.",
     "dispositivoAhora": "Añadir ahora",
     "creando": "Creando tu casa…",
-    "errorCrear": "No se ha podido crear la casa. Inténtalo otra vez."
+    "errorCrear": "No se ha podido crear la casa. Inténtalo otra vez.",
+    "errorCrearDetalle": "No se ha podido crear la casa: {{detalle}}"
   },
   "habitaciones": {
     "salon": "Salón",
@@ -167,7 +168,9 @@
     "not_authenticated": "Tienes que iniciar sesión.",
     "generico": "Algo no ha ido bien. Inténtalo otra vez.",
     "sinConexion": "No hay conexión con el servidor.",
-    "deviceOffline": "El dispositivo está sin conexión."
+    "deviceOffline": "El dispositivo está sin conexión.",
+    "empty_name": "Ponle un nombre a la casa.",
+    "unknown": "Algo no ha ido bien y no sé decirte qué."
   },
   "ajustes": {
     "perfil": "Perfil",

@@ -39,19 +39,27 @@ export async function listarCasas(): Promise<CasaConRol[]> {
 /**
  * Crea una casa. Quien la crea entra como 'owner' automáticamente:
  * lo hace un disparador de la base de datos, no la app.
+ *
+ * Va por una función de la base de datos (create_home) y NO por un
+ * insert normal. Motivo: un INSERT que pide de vuelta la fila creada
+ * hace que Postgres compruebe también si puedes LEERLA, y en ese
+ * instante todavía no eres miembro de tu propia casa —la fila que te
+ * hace miembro la crea el disparador justo después—, así que la
+ * denegaba. Ver supabase/migrations/..._crear_casa.sql.
  */
 export async function crearCasa(nombre: string, timezone = 'Europe/Madrid'): Promise<Home> {
-  const { data: sesion } = await supabase.auth.getUser();
-  if (!sesion.user) throw new Error('No hay sesión iniciada.');
-
-  const { data, error } = await supabase
-    .from('homes')
-    .insert({ name: nombre.trim(), timezone, created_by: sesion.user.id })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc('create_home', {
+    p_name: nombre.trim(),
+    p_timezone: timezone,
+  });
 
   if (error) throw error;
-  return data as Home;
+
+  const r = data as { ok?: boolean; error?: string; home?: Home } | null;
+  if (!r?.ok || !r.home) {
+    throw new Error(r?.error ?? 'unknown');
+  }
+  return r.home;
 }
 
 export async function renombrarCasa(homeId: string, nombre: string): Promise<void> {

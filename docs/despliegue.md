@@ -91,3 +91,30 @@ puede abrir desde el móvil ni compartir con nadie: sale un muro de acceso.
 Debe estar **desactivada**. No baja la seguridad del sistema: quien abra la
 dirección solo ve la pantalla de inicio de sesión, y sin cuenta no ve ni un dato
 (lo impiden las políticas RLS de la base de datos, no la app).
+
+
+## Probar las políticas de seguridad de verdad
+
+`scripts/probar-rls.sh` levanta un Postgres desechable, imita el entorno de
+Supabase y ejecuta el flujo completo **con el rol `authenticated`, sin
+superpoderes**.
+
+Esto importa más de lo que parece. Las primeras pruebas del esquema se hicieron
+conectando como **superusuario de Postgres**, y el superusuario **se salta el
+RLS**: probaban las funciones de permisos, pero nunca las políticas.
+
+Por ese hueco se coló un fallo que rompía el asistente de alta entero —crear
+una casa fallaba siempre— y ninguna prueba lo detectó. El script cubre ahora:
+
+1. Crear casa
+2. Quedar como propietario
+3. Leer la casa propia
+4. Crear habitaciones
+5. Rechazo de nombre vacío
+6. Generar código de invitado
+7. Un extraño NO ve la casa
+8. Canje del código
+9. La invitada ya ve la casa
+10. La invitada no puede administrar
+
+Los pasos 7 a 10 son el criterio de aceptación de la fase 1.

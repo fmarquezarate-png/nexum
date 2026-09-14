@@ -44,8 +44,16 @@ export default function OnboardingScreen() {
       const casa = await crearCasa(nombreCasa.trim() || t('onboarding.casaPlaceholder'));
       setHomeId(casa.id);
       setPaso(2);
-    } catch {
-      setError(t('onboarding.errorCrear'));
+    } catch (fallo) {
+      // Enseñar SIEMPRE el motivo real. Un "no se ha podido" a secas
+      // obliga a adivinar, y adivinar cuesta horas.
+      const bruto = fallo instanceof Error ? fallo.message : String(fallo);
+      const traducido = t(`errores.${bruto}`);
+      setError(
+        traducido === `errores.${bruto}`
+          ? t('onboarding.errorCrearDetalle', { detalle: bruto })
+          : traducido,
+      );
     } finally {
       setCargando(false);
     }
