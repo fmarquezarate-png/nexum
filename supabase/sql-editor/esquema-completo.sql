@@ -6,6 +6,13 @@
 --  sin terminal. Si tu proyecto ya tiene tablas, NO uses este archivo:
 --  usa el archivo incremental que corresponda.
 --
+--
+--  ⚠ ANTES DE PEGAR: VACÍA EL EDITOR ⚠
+--  Pulsa dentro del recuadro, selecciona todo (Ctrl+A / Cmd+A) y bórralo,
+--  o abre una consulta nueva con "New query". Si queda texto de una
+--  ejecución anterior, se mezcla con este y da un error de sintaxis
+--  raro, del estilo "syntax error at or near".
+--
 --  CÓMO SE USA
 --    1. https://supabase.com -> tu proyecto -> SQL Editor
 --    2. New query -> pega todo -> Run

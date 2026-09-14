@@ -45,12 +45,14 @@
     "faltaEmail": "Escribe tu correo.",
     "faltaPassword": "Escribe tu contraseña.",
     "faltaNombre": "Escribe tu nombre.",
-    "passwordCorta": "La contraseña debe tener al menos 6 caracteres."
+    "passwordCorta": "La contraseña debe tener al menos 6 caracteres.",
+    "nexiBienvenida": "¡Hola! Soy Nexi. Entra y preparamos tu hogar en un momento.",
+    "nexiRegistro": "¡Encantado! Con tu cuenta lista, montamos tu casa en tres pasos."
   },
   "onboarding": {
     "paso": "Paso {{n}} de {{total}}",
     "casaTitulo": "¿Cómo se llama tu casa?",
-    "casaNexi": "¡Hola! Soy Nexi. Vamos a preparar tu hogar en un momento.",
+    "casaNexi": "Empezamos por tu casa. Ponle el nombre que uses para hablar de ella.",
     "casaLabel": "Nombre de la casa",
     "casaPlaceholder": "Mi casa",
     "casaAyuda": "Puedes cambiarlo cuando quieras.",

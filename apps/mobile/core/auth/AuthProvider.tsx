@@ -50,19 +50,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [cargando, setCargando] = useState(true);
 
   async function cargarPerfil(userId: string) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    setPerfil((data as Profile) ?? null);
+    try {
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      setPerfil((data as Profile) ?? null);
+    } catch {
+      // Sin perfil la app sigue funcionando: solo se pierde el nombre.
+      setPerfil(null);
+    }
   }
 
   useEffect(() => {
     let vivo = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!vivo) return;
-      setSession(data.session);
-      if (data.session) void cargarPerfil(data.session.user.id);
-      setCargando(false);
-    });
+    // El .catch() es imprescindible: si esto falla y no se recoge el
+    // error, "cargando" se queda en true para siempre y la app se queda
+    // colgada en la ruedecita, sin pantalla y sin mensaje.
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!vivo) return;
+        setSession(data.session);
+        if (data.session) void cargarPerfil(data.session.user.id);
+      })
+      .catch(() => {
+        if (vivo) setSession(null);
+      })
+      .finally(() => {
+        if (vivo) setCargando(false);
+      });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_evento, nueva) => {
       setSession(nueva);

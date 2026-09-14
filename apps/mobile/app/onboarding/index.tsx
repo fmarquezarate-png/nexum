@@ -7,7 +7,7 @@ import { t } from '@/lib/i18n';
 import {
   Button,
   HIT_TARGET,
-  Mascota,
+  Saludo,
   Screen,
   TextField,
   colors,
@@ -83,7 +83,7 @@ export default function OnboardingScreen() {
 
       {paso === 1 && (
         <>
-          <Mascota quien="nexi" mensaje={t('onboarding.casaNexi')} />
+          <Saludo mensaje={t('onboarding.casaNexi')} />
           <Text style={styles.pregunta}>{t('onboarding.casaTitulo')}</Text>
           <TextField
             label={t('onboarding.casaLabel')}
@@ -105,7 +105,7 @@ export default function OnboardingScreen() {
 
       {paso === 2 && (
         <>
-          <Mascota quien="nexi" mensaje={t('onboarding.habitacionesNexi')} tamano={110} />
+          <Saludo mensaje={t('onboarding.habitacionesNexi')} tamano={110} />
           <Text style={styles.pregunta}>{t('onboarding.habitacionesTitulo')}</Text>
 
           <View style={styles.fichas}>
@@ -151,7 +151,7 @@ export default function OnboardingScreen() {
 
       {paso === 3 && (
         <>
-          <Mascota quien="nexi" mensaje={t('onboarding.dispositivoNexi')} />
+          <Saludo mensaje={t('onboarding.dispositivoNexi')} />
           <Text style={styles.pregunta}>{t('onboarding.dispositivoTitulo')}</Text>
           <Button
             label={t('onboarding.dispositivoAhora')}

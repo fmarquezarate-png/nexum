@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '@/core/auth';
 import { t } from '@/lib/i18n';
-import { Button, Mascota, Screen, TextField, colors, spacing, typography } from '@/ui';
+import { Button, Saludo, Screen, TextField, colors, spacing, typography } from '@/ui';
 
 export default function SignUpScreen() {
   const { registrarse } = useAuth();
@@ -32,7 +32,7 @@ export default function SignUpScreen() {
 
   return (
     <Screen title={t('auth.signUp')}>
-      <Mascota quien="nexi" mensaje={t('onboarding.casaNexi')} tamano={120} />
+      <Saludo mensaje={t('auth.nexiRegistro')} tamano={120} />
 
       <View style={styles.formulario}>
         <TextField

@@ -1,10 +1,10 @@
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '@/core/auth';
 import { t } from '@/lib/i18n';
-import { Button, Screen, TextField, colors, spacing, typography } from '@/ui';
+import { Button, Saludo, Screen, TextField, colors, spacing, typography } from '@/ui';
 
 export default function SignInScreen() {
   const { entrar } = useAuth();
@@ -29,11 +29,7 @@ export default function SignInScreen() {
   return (
     <Screen>
       <View style={styles.cabecera}>
-        <Image
-          source={require('../../assets/icon.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <Saludo mensaje={t('auth.nexiBienvenida')} tamano={130} />
         <Text style={styles.titulo}>{t('auth.bienvenida')}</Text>
         <Text style={styles.lema}>{t('app.tagline')}</Text>
       </View>
@@ -78,8 +74,7 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  cabecera: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xl },
-  logo: { width: 88, height: 88, borderRadius: 20, marginBottom: spacing.sm },
+  cabecera: { alignItems: 'center', gap: spacing.xs, paddingTop: spacing.md, paddingBottom: spacing.lg },
   titulo: { ...typography.title, color: colors.text, textAlign: 'center' },
   lema: { ...typography.body, color: colors.textMuted },
   formulario: { gap: spacing.lg },

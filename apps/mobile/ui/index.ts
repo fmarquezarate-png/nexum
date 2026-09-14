@@ -8,6 +8,8 @@ export { Placeholder } from './Placeholder';
 export { Button } from './Button';
 export { TextField } from './TextField';
 export { Mascota, type MascotaId } from './Mascota';
+export { Burbuja } from './Burbuja';
+export { Saludo } from './Saludo';
 export { EmptyState } from './EmptyState';
 export { ListRow, Badge } from './ListRow';
 export { Divider } from './Divider';
