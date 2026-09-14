@@ -1,0 +1,8 @@
+{
+  "name": "@nexum/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tipos TypeScript derivados de @nexum/contracts. No añadir nada que no esté en el contrato.",
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

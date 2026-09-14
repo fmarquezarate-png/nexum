@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexum.app/contracts/payloads.schema.json",
+  "title": "Nexum — Payloads MQTT",
+  "description": "Forma exacta de cada mensaje que viaja por MQTT. Version 1.0.0. Todo 'ts' es un epoch en SEGUNDOS (numero de segundos desde el 1 de enero de 1970, UTC).",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "ts": {
+      "type": "integer",
+      "description": "Epoch en segundos, UTC",
+      "minimum": 1700000000
+    },
+    "module": {
+      "type": "string",
+      "enum": ["coolio", "plantico"]
+    },
+
+    "Command": {
+      "title": "Comando — topic /cmd",
+      "type": "object",
+      "required": ["id", "ts", "module", "action", "params"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid", "description": "Id de la fila en la tabla commands. El dispositivo lo devuelve tal cual en el ack." },
+        "ts": { "$ref": "#/$defs/ts" },
+        "module": { "$ref": "#/$defs/module" },
+        "action": { "type": "string", "enum": ["set_state", "resync", "identify", "reboot"] },
+        "params": { "type": "object" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "module": { "const": "coolio" }, "action": { "const": "set_state" } }, "required": ["module", "action"] },
+          "then": { "properties": { "params": { "$ref": "#/$defs/CoolioSetStateParams" } } }
+        }
+      ]
+    },
+
+    "CoolioSetStateParams": {
+      "title": "Parametros de set_state para Coolio",
+      "type": "object",
+      "required": ["power"],
+      "additionalProperties": false,
+      "properties": {
+        "power": { "type": "boolean" },
+        "mode": { "type": "string", "enum": ["auto", "cool", "heat", "fan", "dry"] },
+        "target_temp": { "type": "integer", "minimum": 16, "maximum": 30 },
+        "fan_speed": { "type": "string", "enum": ["auto", "low", "medium", "high"] },
+        "swing": { "type": "string", "enum": ["auto", "off", "vertical", "horizontal", "both"] }
+      }
+    },
+
+    "Ack": {
+      "title": "Confirmacion — topic /ack",
+      "type": "object",
+      "required": ["id", "ts", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid", "description": "El mismo id que llego en el comando" },
+        "ts": { "$ref": "#/$defs/ts" },
+        "status": { "type": "string", "enum": ["ok", "error"] },
+        "error": { "type": "string", "description": "Solo si status = error" }
+      }
+    },
+
+    "CoolioState": {
+      "title": "Estado — topic /state (retained)",
+      "description": "OJO: para Coolio esto es el ULTIMO ESTADO QUE NEXUM ORDENO, no una lectura del aparato. El infrarrojo es unidireccional.",
+      "type": "object",
+      "required": ["ts", "power"],
+      "additionalProperties": false,
+      "properties": {
+        "ts": { "$ref": "#/$defs/ts" },
+        "power": { "type": "boolean" },
+        "mode": { "type": "string", "enum": ["auto", "cool", "heat", "fan", "dry"] },
+        "target_temp": { "type": "integer", "minimum": 16, "maximum": 30 },
+        "fan_speed": { "type": "string", "enum": ["auto", "low", "medium", "high"] },
+        "swing": { "type": "string", "enum": ["auto", "off", "vertical", "horizontal", "both"] },
+        "fw": { "type": "string", "description": "Version del firmware, ej: 1.0.3" },
+        "rssi": { "type": "integer", "description": "Potencia de la senal WiFi en dBm. Mas cerca de 0 es mejor: -50 excelente, -80 malo." }
+      }
+    },
+
+    "Telemetry": {
+      "title": "Telemetria — topic /telemetry",
+      "description": "Lecturas REALES del sensor SHT31. Estas si son medidas de verdad.",
+      "type": "object",
+      "required": ["ts"],
+      "additionalProperties": true,
+      "properties": {
+        "ts": { "$ref": "#/$defs/ts" },
+        "temperature": { "type": "number", "minimum": -40, "maximum": 85, "description": "Grados Celsius" },
+        "humidity": { "type": "number", "minimum": 0, "maximum": 100, "description": "Humedad relativa en %" },
+        "rssi": { "type": "integer" }
+      }
+    },
+
+    "Presence": {
+      "title": "Presencia — topic /lwt (retained)",
+      "type": "object",
+      "required": ["online"],
+      "additionalProperties": false,
+      "properties": {
+        "online": { "type": "boolean" },
+        "ts": { "$ref": "#/$defs/ts" }
+      }
+    }
+  }
+}

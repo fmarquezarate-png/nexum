@@ -1,0 +1,24 @@
+{
+  "name": "@nexum/mqtt-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Servicio Node permanente: escucha MQTT y escribe en Supabase.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "node --watch --experimental-strip-types src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "mqtt": "^5.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "typescript": "^5.7.0"
+  }
+}

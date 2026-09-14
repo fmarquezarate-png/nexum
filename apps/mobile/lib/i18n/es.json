@@ -1,0 +1,68 @@
+{
+  "app": {
+    "name": "Nexum",
+    "tagline": "Tu hogar, más simple."
+  },
+  "tabs": {
+    "home": "Inicio",
+    "devices": "Dispositivos",
+    "automations": "Automatizaciones",
+    "stats": "Estadísticas",
+    "settings": "Ajustes"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "forgotPassword": "He olvidado mi contraseña",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "noAccount": "¿Todavía no tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?"
+  },
+  "home": {
+    "greeting": "¡Hola, {{name}}!",
+    "subtitle": "Tu hogar en armonía.",
+    "myDevices": "Mis dispositivos",
+    "seeAll": "Ver todos",
+    "automations": "Automatizaciones"
+  },
+  "scenes": {
+    "home": "En casa",
+    "night": "Noche",
+    "away": "Fuera",
+    "eco": "Eco"
+  },
+  "device": {
+    "online": "Conectado",
+    "offline": "Sin conexión",
+    "lastSync": "Según el último cambio, {{time}}",
+    "resync": "Resincronizar",
+    "resyncHint": "Reenvía el estado completo al aire acondicionado.",
+    "realReading": "Lectura del sensor",
+    "orderedState": "Último estado ordenado"
+  },
+  "coolio": {
+    "power": "Encendido",
+    "modes": {
+      "auto": "Auto",
+      "cool": "Frío",
+      "heat": "Calor",
+      "fan": "Ventilación",
+      "dry": "Seco"
+    },
+    "fanSpeed": "Velocidad",
+    "swing": "Dirección",
+    "timer": "Temporizador",
+    "indoorTemp": "Interior",
+    "humidity": "Humedad"
+  },
+  "errors": {
+    "codeNotFound": "Este código no es válido.",
+    "codeExpired": "Este código ha caducado.",
+    "codeRevoked": "El propietario ha desactivado este código.",
+    "codeExhausted": "Este código ya se ha usado el número máximo de veces.",
+    "alreadyMember": "Ya tienes acceso a esta casa.",
+    "noPermission": "No tienes permiso para controlar este dispositivo.",
+    "deviceOffline": "El dispositivo está sin conexión."
+  }
+}

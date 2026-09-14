@@ -1,0 +1,41 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno — NUNCA subir un .env al repositorio
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Expo / React Native
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Compilados
+build/
+*.tsbuildinfo
+
+# Supabase (CLI local)
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Logs
+*.log
+npm-debug.log*

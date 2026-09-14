@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Nexum",
+    "slug": "nexum",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "nexum",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#F7F5F0",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.nexum.mobile"
+    },
+    "android": {
+      "package": "app.nexum.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F5F0"
+      }
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "comentario": "Las claves de Supabase NO van aquí. Van en el archivo .env como EXPO_PUBLIC_*"
+    }
+  }
+}

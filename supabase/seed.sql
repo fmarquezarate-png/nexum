@@ -1,0 +1,24 @@
+-- ═══════════════════════════════════════════════════════════════════════
+--  Nexum — datos de ejemplo
+-- ═══════════════════════════════════════════════════════════════════════
+--  Este archivo se ejecuta solo con "supabase db reset" en LOCAL.
+--  NUNCA en producción.
+--
+--  Está vacío a propósito: los datos de ejemplo necesitan un usuario
+--  real en auth.users, y ese usuario lo creas tú registrándote en la app.
+--
+--  Cuando tengas tu cuenta creada, si quieres datos de prueba:
+--    1. Regístrate en la app.
+--    2. Busca tu id en Supabase → Authentication → Users (columna UID).
+--    3. Descomenta el bloque de abajo y pega tu id en :mi_usuario.
+-- ═══════════════════════════════════════════════════════════════════════
+
+-- \set mi_usuario '00000000-0000-0000-0000-000000000000'
+--
+-- insert into public.homes (id, name, timezone, created_by) values
+--   ('11111111-1111-1111-1111-111111111111', 'Casa Banana', 'Europe/Madrid', :'mi_usuario');
+-- -- el trigger on_home_created ya te añade como owner
+--
+-- insert into public.rooms (id, home_id, name, icon, sort_order) values
+--   ('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'Salón', 'sofa', 0),
+--   ('33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 'Dormitorio', 'bed', 1);

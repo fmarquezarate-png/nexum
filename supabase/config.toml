@@ -1,0 +1,42 @@
+# Configuración del CLI de Supabase.
+# Solo la usa "supabase start" (entorno local con Docker).
+# Nosotros trabajamos contra el proyecto en la nube; este archivo está
+# aquí por si algún día quieres levantar todo en tu portátil.
+
+project_id = "nexum"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "nexum://"
+additional_redirect_urls = ["nexum://", "exp://localhost:8081"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+# En fase 1 se deja en false para poder probar sin abrir el correo.
+# ACTIVAR A true ANTES DE PUBLICAR.
+enable_confirmations = false
+
+# OAuth (Google / Apple): diseñado pero NO activado en fase 1.
+# [auth.external.google]
+# enabled = true
+
+[realtime]
+enabled = true
