@@ -52,6 +52,7 @@ function Navegacion() {
         <Stack.Screen name="devices/[id]" options={{ headerShown: true, title: '' }} />
         <Stack.Screen name="casas/index" options={{ headerShown: true, title: 'Mis casas' }} />
         <Stack.Screen name="casas/[id]" options={{ headerShown: true, title: '' }} />
+        <Stack.Screen name="emparejar" options={{ headerShown: true, title: '' }} />
         <Stack.Screen name="canjear" options={{ headerShown: true, title: '' }} />
         <Stack.Screen name="perfil" options={{ headerShown: true, title: '' }} />
       </Stack>

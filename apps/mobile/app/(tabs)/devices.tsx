@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 
 import { listarCasas, type CasaConRol } from '@/core/homes';
+import { mensajeDe } from '@/lib/errores';
 import { t } from '@/lib/i18n';
 import {
   Button,
@@ -23,7 +24,7 @@ import {
 type Estado =
   | { tipo: 'cargando' }
   | { tipo: 'listo'; casas: CasaConRol[] }
-  | { tipo: 'error' };
+  | { tipo: 'error'; motivo: string };
 
 /**
  * Dispositivos, agrupados por casa y habitación.
@@ -42,7 +43,7 @@ export default function DevicesScreen() {
         setEstado({ tipo: 'listo', casas });
         setActiva((prev) => prev ?? casas[0]?.id ?? null);
       })
-      .catch(() => setEstado({ tipo: 'error' }));
+      .catch((fallo) => setEstado({ tipo: 'error', motivo: mensajeDe(fallo) }));
   }, []);
 
   useFocusEffect(cargar);
@@ -61,6 +62,7 @@ export default function DevicesScreen() {
         <ErrorState
           titulo={t('errores.cargar')}
           detalle={t('errores.cargarDetalle')}
+          tecnico={estado.motivo}
           onReintentar={cargar}
         />
       </Screen>
@@ -108,7 +110,7 @@ export default function DevicesScreen() {
       <Button
         label={t('dispositivos.anadir')}
         variante="secundario"
-        onPress={() => router.push('/onboarding')}
+        onPress={() => router.push('/emparejar')}
         icono={<Plus size={18} strokeWidth={2} />}
       />
     </Screen>

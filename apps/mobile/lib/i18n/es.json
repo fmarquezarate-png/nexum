@@ -281,5 +281,15 @@
     "sinDispositivosTitulo": "Tu casa está lista y vacía",
     "sinDispositivosTexto": "Cuando conectes tu primer aparato aparecerá aquí, con su estado en vivo.",
     "casaActiva": "Casa"
+  },
+  "emparejar": {
+    "titulo": "Añadir dispositivo",
+    "proximoTitulo": "Conectar tu primer aparato",
+    "proximoMensaje": "Todavía no sé emparejar equipos, pero ya tengo el sitio preparado.",
+    "incluye": [
+      "Enchufas el equipo y aparece como red WiFi",
+      "Le dices cuál es tu WiFi de casa desde el móvil",
+      "Eliges en qué habitación está y listo"
+    ]
   }
 }

@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '@/core/auth';
 import { listarCasas, type CasaConRol } from '@/core/homes';
+import { mensajeDe } from '@/lib/errores';
 import { t } from '@/lib/i18n';
 import {
   Badge,
@@ -21,7 +22,7 @@ import {
 type Estado =
   | { tipo: 'cargando' }
   | { tipo: 'listo'; casas: CasaConRol[] }
-  | { tipo: 'error' };
+  | { tipo: 'error'; motivo: string };
 
 /**
  * Inicio.
@@ -38,7 +39,7 @@ export default function HomeScreen() {
   const cargar = useCallback(() => {
     listarCasas()
       .then((casas) => setEstado({ tipo: 'listo', casas }))
-      .catch(() => setEstado({ tipo: 'error' }));
+      .catch((fallo) => setEstado({ tipo: 'error', motivo: mensajeDe(fallo) }));
   }, []);
 
   useFocusEffect(cargar);
@@ -76,6 +77,7 @@ export default function HomeScreen() {
         <ErrorState
           titulo={t('errores.cargar')}
           detalle={t('errores.cargarDetalle')}
+          tecnico={estado.motivo}
           onReintentar={cargar}
         />
       ) : (

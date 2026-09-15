@@ -11,6 +11,15 @@ interface ErrorStateProps {
   titulo?: string;
   /** El motivo concreto. Nunca "ha ocurrido un error". */
   detalle?: string;
+  /**
+   * El mensaje EXACTO que devolvió el servidor.
+   *
+   * Se enseña siempre, en pequeño. Un "revisa tu conexión" cuando hay
+   * conexión de sobra deja a todo el mundo a ciegas: al usuario, que no
+   * sabe qué hacer, y a quien tiene que arreglarlo, que no sabe por
+   * dónde empezar. Es feo, y es mil veces mejor que ocultarlo.
+   */
+  tecnico?: string | null;
   onReintentar?: () => void;
 }
 
@@ -24,7 +33,7 @@ interface ErrorStateProps {
  * Sin mascota a propósito: cuando algo va mal, un dibujo sonriente
  * molesta.
  */
-export function ErrorState({ titulo, detalle, onReintentar }: ErrorStateProps) {
+export function ErrorState({ titulo, detalle, tecnico, onReintentar }: ErrorStateProps) {
   const { colors } = useTheme();
 
   return (
@@ -39,6 +48,15 @@ export function ErrorState({ titulo, detalle, onReintentar }: ErrorStateProps) {
       <Text style={[typography.body, { color: colors.textSecondary }, styles.centro, styles.ancho]}>
         {detalle ?? 'Revisa tu conexión a internet. Tus datos siguen a salvo.'}
       </Text>
+
+      {tecnico ? (
+        <Text
+          style={[typography.caption, { color: colors.textFaint }, styles.centro, styles.tecnico]}
+          selectable
+        >
+          {tecnico}
+        </Text>
+      ) : null}
 
       {onReintentar ? (
         <Button
@@ -58,4 +76,5 @@ const styles = StyleSheet.create({
   centro: { textAlign: 'center' },
   ancho: { maxWidth: 320 },
   boton: { marginTop: spacing.xs },
+  tecnico: { maxWidth: 320, fontFamily: 'monospace' },
 });

@@ -1,7 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { Copy, DoorOpen, KeyRound, Pencil, Plus, Trash2, UserRound, X } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -27,6 +27,7 @@ import {
   type MiembroConPerfil,
 } from '@/core/homes';
 import { fechaCorta, fechaLarga } from '@/lib/format';
+import { mensajeDe } from '@/lib/errores';
 import { t } from '@/lib/i18n';
 import type { AccessCode, Room } from '@nexum/shared-types';
 import {
@@ -69,7 +70,10 @@ interface Datos {
   dispositivos: number;
 }
 
-type Estado = { tipo: 'cargando' } | { tipo: 'listo'; datos: Datos } | { tipo: 'error' };
+type Estado =
+  | { tipo: 'cargando' }
+  | { tipo: 'listo'; datos: Datos }
+  | { tipo: 'error'; motivo: string };
 
 export default function DetalleCasaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -79,6 +83,7 @@ export default function DetalleCasaScreen() {
   const { avisarExito, avisarAviso } = useAviso();
 
   const [estado, setEstado] = useState<Estado>({ tipo: 'cargando' });
+  const borrada = useRef(false);
   const [confirmando, setConfirmando] = useState<Confirmacion>(null);
   const [nuevaHabitacion, setNuevaHabitacion] = useState('');
   const [renombrando, setRenombrando] = useState(false);
@@ -91,6 +96,11 @@ export default function DetalleCasaScreen() {
 
   const cargar = useCallback(() => {
     if (!id) return;
+    // Tras borrar la casa, la pantalla puede recibir el foco una última
+    // vez antes de desmontarse. Sin esta guarda, volvería a pedir datos
+    // de una casa que ya no existe y pintaría un error encima del aviso
+    // de que se ha borrado bien.
+    if (borrada.current) return;
     Promise.all([listarCasas(), listarHabitaciones(id), listarMiembros(id)])
       .then(async ([casas, habitaciones, miembros]) => {
         const casa = casas.find((c) => c.id === id);
@@ -109,7 +119,7 @@ export default function DetalleCasaScreen() {
 
         setEstado({ tipo: 'listo', datos: { casa, habitaciones, miembros, codigos, dispositivos } });
       })
-      .catch(() => setEstado({ tipo: 'error' }));
+      .catch((fallo) => setEstado({ tipo: 'error', motivo: mensajeDe(fallo) }));
   }, [id, navigation]);
 
   useFocusEffect(cargar);
@@ -121,6 +131,7 @@ export default function DetalleCasaScreen() {
         <ErrorState
           titulo={t('errores.cargar')}
           detalle={t('errores.cargarDetalle')}
+          tecnico={estado.motivo}
           onReintentar={cargar}
         />
       </Screen>
@@ -180,12 +191,14 @@ export default function DetalleCasaScreen() {
     try {
       if (c.que === 'borrarCasa') {
         await borrarCasa(id);
+        borrada.current = true;
         avisarExito(t('casas.borrada'));
         router.replace('/casas');
         return;
       }
       if (c.que === 'salirCasa') {
         await expulsarMiembro(id, session!.user.id);
+        borrada.current = true;
         avisarExito(t('casas.salida'));
         router.replace('/casas');
         return;
@@ -205,8 +218,11 @@ export default function DetalleCasaScreen() {
         avisarExito(t('codigos.revocado'));
       }
       cargar();
-    } catch {
-      avisarAviso(t('errores.generico'));
+    } catch (fallo) {
+      // El motivo exacto, no un "algo no ha ido bien": si la base de
+      // datos rechaza el borrado hay que poder leer por qué.
+      borrada.current = false;
+      avisarAviso(mensajeDe(fallo));
     }
   }
 

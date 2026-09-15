@@ -5,7 +5,7 @@ export default function StatsScreen() {
   return (
     <Screen title={t('tabs.stats')}>
       <Proximamente
-        quien="airi"
+        quien="nexi"
         titulo={t('proximamente.estadisticas.titulo')}
         mensaje={t('proximamente.estadisticas.mensaje')}
         incluye={tList('proximamente.estadisticas.incluye')}

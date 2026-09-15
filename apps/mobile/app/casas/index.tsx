@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { crearCasa, listarCasas, type CasaConRol } from '@/core/homes';
+import { mensajeDe } from '@/lib/errores';
 import { t } from '@/lib/i18n';
 import {
   Badge,
@@ -22,7 +23,10 @@ import {
   useTheme,
 } from '@/ui';
 
-type Estado = { tipo: 'cargando' } | { tipo: 'listo'; casas: CasaConRol[] } | { tipo: 'error' };
+type Estado =
+  | { tipo: 'cargando' }
+  | { tipo: 'listo'; casas: CasaConRol[] }
+  | { tipo: 'error'; motivo: string };
 
 export default function CasasScreen() {
   const { colors } = useTheme();
@@ -35,7 +39,7 @@ export default function CasasScreen() {
   const cargar = useCallback(() => {
     listarCasas()
       .then((casas) => setEstado({ tipo: 'listo', casas }))
-      .catch(() => setEstado({ tipo: 'error' }));
+      .catch((fallo) => setEstado({ tipo: 'error', motivo: mensajeDe(fallo) }));
   }, []);
 
   // Recarga al volver: si acabas de salirte de una casa o de borrarla,
@@ -66,6 +70,7 @@ export default function CasasScreen() {
         <ErrorState
           titulo={t('errores.cargar')}
           detalle={t('errores.cargarDetalle')}
+          tecnico={estado.motivo}
           onReintentar={cargar}
         />
       </Screen>
