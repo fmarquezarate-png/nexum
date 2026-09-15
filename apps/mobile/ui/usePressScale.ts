@@ -1,7 +1,8 @@
 import { useRef } from 'react';
 import { Animated, Platform, Pressable } from 'react-native';
 
-import { PRESS_SCALE, duration } from './tokens';
+import { useTheme } from './ThemeProvider';
+import { easing } from './tokens';
 
 /**
  * Pressable que acepta estilos animados.
@@ -12,6 +13,8 @@ import { PRESS_SCALE, duration } from './tokens';
  */
 export const PressableAnimado = Animated.createAnimatedComponent(Pressable);
 
+type Pieza = 'boton' | 'tarjeta';
+
 /**
  * Encoge levemente un elemento mientras se pulsa.
  *
@@ -19,22 +22,47 @@ export const PressableAnimado = Animated.createAnimatedComponent(Pressable);
  * interfaz: las apps cuidadas responden al dedo con movimiento, no
  * apagándose.
  *
- * El movimiento va por el hilo nativo, así que no se entrecorta aunque la
- * pantalla esté ocupada cargando datos. En web no existe ese hilo.
+ * La vuelta va con muelle y no con una duración fija porque el regreso
+ * de una pulsación tiene que sentirse elástico sin rebotar; el muelle
+ * está calibrado (amortiguación 18, rigidez 320) para no producir
+ * sobreimpulso visible.
+ *
+ * Una tarjeta encoge menos que un botón: el mismo 3 % en un área ancha
+ * se percibe como un salto.
+ *
+ * El movimiento va por el hilo nativo, así que no se entrecorta aunque
+ * la pantalla esté ocupada cargando datos. En web no existe ese hilo.
  */
-export function usePressScale(escala = PRESS_SCALE) {
+export function usePressScale(pieza: Pieza | number = 'boton') {
+  const { motion } = useTheme();
   const valor = useRef(new Animated.Value(1)).current;
 
-  const animar = (a: number, ms: number) =>
-    Animated.timing(valor, {
-      toValue: a,
-      duration: ms,
-      useNativeDriver: Platform.OS !== 'web',
-    }).start();
+  const escala =
+    typeof pieza === 'number'
+      ? motion.reducido
+        ? 1
+        : pieza
+      : pieza === 'tarjeta'
+        ? motion.escalaTarjeta
+        : motion.escalaBoton;
+
+  const nativo = Platform.OS !== 'web';
 
   return {
     animatedStyle: { transform: [{ scale: valor }] },
-    onPressIn: () => animar(escala, duration.instant),
-    onPressOut: () => animar(1, duration.fast),
+    onPressIn: () =>
+      Animated.timing(valor, {
+        toValue: escala,
+        duration: motion.instant,
+        useNativeDriver: nativo,
+      }).start(),
+    onPressOut: () =>
+      Animated.spring(valor, {
+        toValue: 1,
+        damping: easing.press.damping,
+        stiffness: easing.press.stiffness,
+        mass: easing.press.mass,
+        useNativeDriver: nativo,
+      }).start(),
   };
 }

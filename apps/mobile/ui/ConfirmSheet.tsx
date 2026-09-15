@@ -5,7 +5,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button } from './Button';
 import { IconTile } from './IconTile';
 import { useTheme } from './ThemeProvider';
-import { vibrarAviso } from './haptics';
+import { avisarDestructivo } from './haptics';
 import { layout, radius, spacing, typography } from './tokens';
 
 interface ConfirmSheetProps {
@@ -123,7 +123,7 @@ export function ConfirmSheet({
               vibra
               onPress={() => {
                 if (segundaPregunta && !esSegundo) {
-                  vibrarAviso();
+                  avisarDestructivo();
                   setPaso(2);
                 } else {
                   onConfirmar();

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { useTheme } from './ThemeProvider';
@@ -13,6 +13,8 @@ interface CardProps {
   compacta?: boolean;
   /** Elevación mayor: dial, hoja modal. */
   elevada?: boolean;
+  /** Etiqueta para el lector de pantalla cuando la tarjeta es pulsable. */
+  accesibilidad?: string;
   style?: ViewStyle;
 }
 
@@ -24,18 +26,32 @@ interface CardProps {
  * plana—. En oscuro sí lo lleva, porque ahí la sombra es invisible y el
  * borde es lo único que separa. Lo decide el token cardBorderWidth, así
  * que este componente no pregunta en qué modo está.
+ *
+ * Al pulsarla baja un escalón de sombra. Es lo que hace que se lea como
+ * un objeto que se hunde y no como una imagen que se encoge; en oscuro,
+ * donde no hay sombra, lo que cambia es el borde.
  */
-export function Card({ children, onPress, compacta, elevada, style }: CardProps) {
+export function Card({
+  children,
+  onPress,
+  compacta,
+  elevada,
+  accesibilidad,
+  style,
+}: CardProps) {
   const { colors, shadow } = useTheme();
-  const { animatedStyle, onPressIn, onPressOut } = usePressScale();
+  const { animatedStyle, onPressIn, onPressOut } = usePressScale('tarjeta');
+  const [pulsada, setPulsada] = useState(false);
+
+  const reposo = elevada ? shadow.raised : shadow.card;
 
   const base: ViewStyle = {
     backgroundColor: elevada ? colors.surfaceElevated : colors.surface,
     borderRadius: radius.card,
     padding: compacta ? layout.cardPaddingCompact : layout.cardPadding,
     borderWidth: colors.cardBorderWidth,
-    borderColor: colors.cardBorder,
-    ...(elevada ? shadow.raised : shadow.card),
+    borderColor: pulsada ? colors.borderStrong : colors.cardBorder,
+    ...(pulsada ? shadow.subtle : reposo),
   };
 
   if (!onPress) {
@@ -45,9 +61,16 @@ export function Card({ children, onPress, compacta, elevada, style }: CardProps)
   return (
     <PressableAnimado
       onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
+      onPressIn={() => {
+        setPulsada(true);
+        onPressIn();
+      }}
+      onPressOut={() => {
+        setPulsada(false);
+        onPressOut();
+      }}
       accessibilityRole="button"
+      accessibilityLabel={accesibilidad}
       style={[base, styles.contenido, animatedStyle, style]}
     >
       {children}
@@ -56,5 +79,6 @@ export function Card({ children, onPress, compacta, elevada, style }: CardProps)
 }
 
 const styles = StyleSheet.create({
-  contenido: { gap: 8 },
+  /** 12 entre los bloques internos, como en la anatomía de la tarjeta. */
+  contenido: { gap: layout.cardGap },
 });

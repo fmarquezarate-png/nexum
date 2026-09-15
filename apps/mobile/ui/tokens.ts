@@ -1,4 +1,4 @@
-import type { TextStyle } from 'react-native';
+import { Easing, type EasingFunction, type TextStyle } from 'react-native';
 
 /**
  * Nexum — tokens de diseño.
@@ -83,6 +83,7 @@ export interface Colors {
   canvas: string;
   surface: string;
   surfaceElevated: string;
+  surfaceOverlay: string;
   surfaceSunken: string;
   surfaceAccent: string;
 
@@ -114,13 +115,26 @@ export interface Colors {
   dangerSoft: string;
   offline: string;
 
+  /**
+   * Fondo del QR. Siempre claro en los dos modos: un QR sobre fondo
+   * oscuro no lo lee ninguna cámara, así que este es el único color
+   * que no se invierte de noche.
+   */
+  surfaceQr: string;
+
   shadowInk: string;
+
+  /** Barra de estado del sistema. Es un token para que ninguna pantalla pregunte por el modo. */
+  statusBarStyle: 'light' | 'dark';
+  /** Aspecto del teclado. Mismo motivo. */
+  keyboardAppearance: 'light' | 'dark';
 }
 
 export const lightColors: Colors = {
   canvas: palette.warm100,
   surface: palette.white,
   surfaceElevated: palette.white,
+  surfaceOverlay: palette.white,
   surfaceSunken: palette.warm200,
   surfaceAccent: palette.green100,
 
@@ -155,7 +169,11 @@ export const lightColors: Colors = {
   dangerSoft: palette.danger100,
   offline: palette.ink300,
 
+  surfaceQr: palette.white,
+
   shadowInk: palette.shadowInk,
+  statusBarStyle: 'dark',
+  keyboardAppearance: 'light',
 };
 
 /**
@@ -172,6 +190,7 @@ export const darkColors: Colors = {
   canvas: '#100F0B',
   surface: '#211E17',
   surfaceElevated: '#2B2721',
+  surfaceOverlay: '#353028',
   surfaceSunken: '#0B0A07',
   surfaceAccent: '#15261C',
 
@@ -204,7 +223,11 @@ export const darkColors: Colors = {
   dangerSoft: '#2C1A15',
   offline: '#6B6459',
 
+  surfaceQr: palette.white,
+
   shadowInk: '#000000',
+  statusBarStyle: 'light',
+  keyboardAppearance: 'dark',
 };
 
 export type Scheme = 'light' | 'dark';
@@ -327,7 +350,10 @@ export const typography = {
     letterSpacing: -1.6,
     // Sin cifras de ancho fijo el número baila al pasar de 9 a 24.
     fontVariant: ['tabular-nums'],
+    // Android añade ~6 px por arriba y por abajo con la métrica de la
+    // fuente; sin esto el número queda descentrado dentro del dial.
     includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   dataHeroUnit: { fontSize: 24, lineHeight: 28, fontWeight: '600', letterSpacing: -0.4 },
   dataL: { fontSize: 34, lineHeight: 38, fontWeight: '700', letterSpacing: -0.8, fontVariant: ['tabular-nums'] },
@@ -372,8 +398,93 @@ export const easing = {
   press: { damping: 18, stiffness: 320, mass: 1 } as const,
 } as const;
 
-/** Escala a la que encoge un elemento al pulsarlo. */
+/** Escala a la que encoge un BOTÓN al pulsarlo. */
 export const PRESS_SCALE = 0.97;
+
+/**
+ * Escala de una TARJETA al pulsarla. Más contenida que la de un botón
+ * porque el área es mucho mayor: el mismo 0.97 en una tarjeta ancha se
+ * percibe como un salto.
+ */
+export const PRESS_SCALE_CARD = 0.985;
+
+/** Entrada escalonada de una lista de tarjetas (§5.3 del lenguaje visual). */
+export const stagger = {
+  /** Desplazamiento de entrada. 8 y no 20: el gesto se insinúa, no se ejecuta. */
+  translateY: 8,
+  duration: 240,
+  /** Retardo entre tarjetas consecutivas. */
+  step: 40,
+  /**
+   * A partir de la séptima tarjeta todas entran con el retardo de la
+   * sexta: si no, la última de una lista larga aparecería dos segundos
+   * después que la primera.
+   */
+  max: 6,
+} as const;
+
+/** Pulso del esqueleto de carga. La única animación que pasa de 350 ms. */
+export const SKELETON_CICLO = 1200;
+
+/** Las curvas ya convertidas a funciones de Animated. */
+export const curvas: Record<'standard' | 'decelerate' | 'accelerate', EasingFunction> = {
+  standard: Easing.bezier(...easing.standard),
+  decelerate: Easing.bezier(...easing.decelerate),
+  accelerate: Easing.bezier(...easing.accelerate),
+};
+
+/**
+ * Movimiento efectivo.
+ *
+ * Con "reducir movimiento" activado en el sistema, TODO desplazamiento y
+ * toda escala pasan a 0 ms y solo queda un fundido de 100 ms. Lo resuelve
+ * el proveedor de tema: ninguna pantalla consulta el ajuste, igual que
+ * con el modo oscuro.
+ */
+export interface Motion {
+  /** true si el sistema pide movimiento reducido. */
+  reducido: boolean;
+  instant: number;
+  fast: number;
+  base: number;
+  slow: number;
+  screen: number;
+  data: number;
+  /** Desplazamiento de entrada de las tarjetas, en px. 0 si hay movimiento reducido. */
+  translateY: number;
+  /** Retardo entre tarjetas. 0 si hay movimiento reducido. */
+  step: number;
+  /** Escala de pulsación. 1 (sin escala) si hay movimiento reducido. */
+  escalaBoton: number;
+  escalaTarjeta: number;
+}
+
+export function motionFor(reducido: boolean): Motion {
+  if (!reducido) {
+    return {
+      reducido: false,
+      ...duration,
+      translateY: stagger.translateY,
+      step: stagger.step,
+      escalaBoton: PRESS_SCALE,
+      escalaTarjeta: PRESS_SCALE_CARD,
+    };
+  }
+  // Solo sobrevive el fundido, y recortado a 100 ms.
+  return {
+    reducido: true,
+    instant: 0,
+    fast: 100,
+    base: 100,
+    slow: 100,
+    screen: 0,
+    data: 0,
+    translateY: 0,
+    step: 0,
+    escalaBoton: 1,
+    escalaTarjeta: 1,
+  };
+}
 
 /** Compatibilidad con el código anterior. Usar layout.hitTarget. */
 export const HIT_TARGET = layout.hitTarget;

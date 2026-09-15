@@ -1,10 +1,9 @@
 import { ChevronRight } from 'lucide-react-native';
-import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useRef, type ReactNode } from 'react';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from './ThemeProvider';
 import { layout, radius, spacing, typography } from './tokens';
-import { PressableAnimado, usePressScale } from './usePressScale';
 
 interface ListRowProps {
   titulo: string;
@@ -21,8 +20,17 @@ interface ListRowProps {
   onPress?: () => void;
   /** Muestra la flecha de "esto se abre". Solo si hay onPress. */
   flecha?: boolean;
+  /** Etiqueta para el lector de pantalla. Por defecto, el título. */
+  accesibilidad?: string;
 }
 
+/**
+ * Fila de lista.
+ *
+ * A diferencia de una tarjeta, la fila NO escala al pulsarla: encoger
+ * una fila dentro de una lista deforma visualmente a sus vecinas. Lo que
+ * cambia es el fondo, que se hunde.
+ */
 export function ListRow({
   titulo,
   subtitulo,
@@ -30,9 +38,18 @@ export function ListRow({
   derecha,
   onPress,
   flecha = true,
+  accesibilidad,
 }: ListRowProps) {
-  const { colors } = useTheme();
-  const { animatedStyle, onPressIn, onPressOut } = usePressScale(0.985);
+  const { colors, motion } = useTheme();
+  const hundido = useRef(new Animated.Value(0)).current;
+
+  const animar = (a: number) =>
+    Animated.timing(hundido, {
+      toValue: a,
+      duration: motion.instant,
+      // Un color no se puede animar por el hilo nativo.
+      useNativeDriver: false,
+    }).start();
 
   const contenido = (
     <>
@@ -48,22 +65,37 @@ export function ListRow({
         ) : null}
       </View>
       {derecha}
-      {onPress && flecha ? <ChevronRight size={18} strokeWidth={2} color={colors.textFaint} /> : null}
+      {onPress && flecha ? (
+        <ChevronRight size={20} strokeWidth={1.75} color={colors.textFaint} />
+      ) : null}
     </>
   );
 
   if (!onPress) return <View style={styles.fila}>{contenido}</View>;
 
   return (
-    <PressableAnimado
+    <Pressable
       onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
+      onPressIn={() => animar(1)}
+      onPressOut={() => animar(0)}
       accessibilityRole="button"
-      style={[styles.fila, animatedStyle]}
+      accessibilityLabel={accesibilidad ?? titulo}
     >
-      {contenido}
-    </PressableAnimado>
+      <Animated.View
+        style={[
+          styles.fila,
+          styles.filaPulsable,
+          {
+            backgroundColor: hundido.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['rgba(0,0,0,0)', colors.surfaceSunken],
+            }),
+          },
+        ]}
+      >
+        {contenido}
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -102,6 +134,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     paddingVertical: spacing.md,
+  },
+  // El hundido se sale un poco por los lados para que el fondo llegue
+  // al borde interior de la tarjeta y no parezca una pastilla flotando.
+  filaPulsable: {
+    marginHorizontal: -spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.xs,
   },
   textos: { flex: 1, gap: spacing.xxs },
   badge: {

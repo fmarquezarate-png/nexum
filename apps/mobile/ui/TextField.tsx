@@ -36,24 +36,29 @@ export function TextField({ label, ayuda, error, editable = true, ...resto }: Te
           resto.onBlur?.(e);
         }}
         placeholderTextColor={colors.textFaint}
+        keyboardAppearance={colors.keyboardAppearance}
         style={[
           typography.body,
           styles.input,
           {
             color: editable ? colors.text : colors.textMuted,
             backgroundColor: colors.surfaceSunken,
-            borderColor: error
-              ? colors.danger
-              : enfocado
-                ? colors.brand
-                : colors.borderInput,
+            // El campo se lee como campo porque está HUNDIDO, no porque
+            // tenga contorno: el borde aparece solo cuando hace falta
+            // señalar algo (el foco o un error).
+            borderColor: error ? colors.danger : enfocado ? colors.brand : 'transparent',
           },
         ]}
         accessibilityLabel={label}
       />
 
       {error ? (
-        <Text style={[typography.caption, { color: colors.danger }]}>{error}</Text>
+        <Text
+          style={[typography.caption, { color: colors.danger }]}
+          accessibilityLiveRegion="polite"
+        >
+          {error}
+        </Text>
       ) : ayuda ? (
         <Text style={[typography.caption, { color: colors.textMuted }]}>{ayuda}</Text>
       ) : null}
@@ -68,6 +73,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    minHeight: 50,
+    minHeight: 52,
   },
 });

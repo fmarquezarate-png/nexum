@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 import { useTheme } from './ThemeProvider';
-import { vibrarAccion } from './haptics';
+import { confirmarAccion } from './haptics';
 import { layout, radius, spacing, typography } from './tokens';
 import { PressableAnimado, usePressScale } from './usePressScale';
 
@@ -36,25 +37,55 @@ export function Button({
   style,
 }: ButtonProps) {
   const { colors } = useTheme();
-  const { animatedStyle, onPressIn, onPressOut } = usePressScale();
+  const { animatedStyle, onPressIn, onPressOut } = usePressScale('boton');
+  const [pulsado, setPulsado] = useState(false);
   const bloqueado = desactivado || cargando;
 
-  const paleta: Record<Variante, { fondo: string; texto: string; borde?: string }> = {
-    primario: { fondo: colors.brandFill, texto: colors.textOnFill },
-    secundario: { fondo: colors.surface, texto: colors.text, borde: colors.borderStrong },
-    texto: { fondo: 'transparent', texto: colors.brand },
-    peligro: { fondo: 'transparent', texto: colors.danger, borde: colors.danger },
+  /**
+   * Al pulsar cambia el COLOR, nunca la opacidad. Bajar la opacidad deja
+   * ver el fondo a través del botón y es el tic visual que más abarata
+   * una interfaz.
+   */
+  const paleta: Record<Variante, { fondo: string; pulsado: string; texto: string; borde?: string }> = {
+    primario: { fondo: colors.brandFill, pulsado: colors.brandPressed, texto: colors.textOnFill },
+    secundario: {
+      fondo: colors.surface,
+      pulsado: colors.surfaceSunken,
+      texto: colors.text,
+      borde: colors.borderStrong,
+    },
+    texto: { fondo: 'transparent', pulsado: colors.brandSoft, texto: colors.brand },
+    peligro: {
+      fondo: 'transparent',
+      pulsado: colors.dangerSoft,
+      texto: colors.danger,
+      borde: colors.danger,
+    },
   };
   const v = paleta[variante];
 
   return (
     <PressableAnimado
-      onPress={() => {
-        if (vibra) vibrarAccion();
-        onPress();
-      }}
-      onPressIn={bloqueado ? undefined : onPressIn}
-      onPressOut={bloqueado ? undefined : onPressOut}
+      onPress={onPress}
+      onPressIn={
+        bloqueado
+          ? undefined
+          : () => {
+              setPulsado(true);
+              onPressIn();
+            }
+      }
+      onPressOut={
+        bloqueado
+          ? undefined
+          : () => {
+              setPulsado(false);
+              onPressOut();
+              // La vibración va AL SOLTAR: confirma que la acción se ha
+              // lanzado, no que el dedo ha tocado el cristal.
+              if (vibra) confirmarAccion();
+            }
+      }
       disabled={bloqueado}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -62,7 +93,7 @@ export function Button({
       style={[
         styles.boton,
         {
-          backgroundColor: v.fondo,
+          backgroundColor: pulsado ? v.pulsado : v.fondo,
           borderWidth: v.borde ? 1 : 0,
           borderColor: v.borde ?? 'transparent',
         },
@@ -93,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ancho: { alignSelf: 'stretch' },
-  bloqueado: { opacity: 0.4 },
+  bloqueado: { opacity: 0.45 },
   contenido: {
     flexDirection: 'row',
     alignItems: 'center',
