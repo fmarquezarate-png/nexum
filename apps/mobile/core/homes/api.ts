@@ -108,7 +108,12 @@ export async function borrarHabitacion(roomId: string): Promise<void> {
 export async function listarMiembros(homeId: string): Promise<MiembroConPerfil[]> {
   const { data, error } = await supabase
     .from('home_members')
-    .select('*, profiles(id, display_name, avatar_url)')
+    // Hay que nombrar la clave foránea: home_members apunta a profiles
+    // DOS veces —user_id, que es el miembro, y granted_by, que es quien
+    // le invitó— y sin decir cuál, PostgREST rechaza la consulta entera
+    // con el error PGRST201. Lo mismo le pasa a device_shares el día que
+    // se le pidan perfiles.
+    .select('*, profiles!home_members_user_id_fkey(id, display_name, avatar_url)')
     .eq('home_id', homeId);
 
   if (error) throw error;
