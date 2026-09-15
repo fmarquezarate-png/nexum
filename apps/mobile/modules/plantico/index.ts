@@ -1,17 +1,26 @@
 /**
- * Módulo Plantico — riego de plantas de interior.
+ * Manifiesto de Plantico — riego de plantas de interior.
  *
- * ⚠ FASE 2 — NO IMPLEMENTAR ⚠
+ * Todavía no tiene mundo: un mundo con las pestañas vacías sería un
+ * edificio sin puertas. Aparece como tarjeta en "Apps integradas" y al
+ * tocarla se abre su ficha de "aún no está".
  *
- * Esta carpeta existe como prueba de arquitectura: el día que se active
- * Plantico, el trabajo debe consistir en rellenar esta carpeta y sus tablas,
- * sin tocar NADA de core/.
- *
- * Si al implementarlo hace falta modificar core/, es que la fase 1 se hizo
- * mal y hay que arreglar el núcleo, no meter el parche aquí.
- *
- * Sus tablas ya están creadas en la migración
- * supabase/migrations/..._module_plantico_phase2.sql, marcadas "FASE 2, sin usar".
+ * El día que llegue: se crea app/(mundos)/plantico/, se cambia estado a
+ * 'disponible' y se le pone la ruta. Nada más.
  */
 
-export {};
+import type { ModuleManifest } from '../tipos';
+
+export const manifiesto: ModuleManifest = {
+  id: 'plantico',
+  nombre: 'Plantico',
+  estado: 'proximamente',
+  ruta: '/modulo/plantico',
+  logo: require('../../assets/marcas/plantico.png'),
+  mascota: require('../../assets/mascotas/broti.png'),
+  tagline: 'Riego inteligente para tus plantas.',
+
+  async resumenDeHogar() {
+    return null;
+  },
+};

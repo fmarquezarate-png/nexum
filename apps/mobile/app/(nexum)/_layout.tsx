@@ -47,19 +47,19 @@ export default function TabsLayout() {
         options={{ title: t('tabs.home'), tabBarIcon: icono(House) }}
       />
       <Tabs.Screen
-        name="devices"
+        name="dispositivos"
         options={{ title: t('tabs.devices'), tabBarIcon: icono(Thermometer) }}
       />
       <Tabs.Screen
-        name="automations"
+        name="automatizaciones"
         options={{ title: t('tabs.automations'), tabBarIcon: icono(Sparkles) }}
       />
       <Tabs.Screen
-        name="stats"
+        name="estadisticas"
         options={{ title: t('tabs.stats'), tabBarIcon: icono(BarChart3) }}
       />
       <Tabs.Screen
-        name="settings"
+        name="ajustes"
         options={{ title: t('tabs.settings'), tabBarIcon: icono(Settings) }}
       />
     </Tabs>

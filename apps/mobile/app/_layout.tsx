@@ -47,12 +47,16 @@ function Navegacion() {
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(nexum)" />
+        {/* UNA sola entrada para todos los mundos. Expo Router descubre
+            las carpetas hijas solo, así que añadir Plantico no toca
+            este archivo. El núcleo nunca nombra un módulo. */}
+        <Stack.Screen name="(mundos)" />
         <Stack.Screen name="onboarding/index" />
-        <Stack.Screen name="devices/[id]" options={{ headerShown: true, title: '' }} />
         <Stack.Screen name="casas/index" options={{ headerShown: true, title: 'Mis casas' }} />
         <Stack.Screen name="casas/[id]" options={{ headerShown: true, title: '' }} />
-        <Stack.Screen name="emparejar" options={{ headerShown: true, title: '' }} />
+        <Stack.Screen name="anadir-dispositivo" options={{ headerShown: true, title: '' }} />
+        <Stack.Screen name="modulo/[id]" options={{ headerShown: true, title: '' }} />
         <Stack.Screen name="canjear" options={{ headerShown: true, title: '' }} />
         <Stack.Screen name="perfil" options={{ headerShown: true, title: '' }} />
       </Stack>

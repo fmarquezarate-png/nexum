@@ -80,7 +80,7 @@ export default function OnboardingScreen() {
 
   async function salir() {
     await AsyncStorage.setItem(CLAVE_OMITIDO, '1').catch(() => {});
-    router.replace('/(tabs)');
+    router.replace('/(nexum)');
   }
 
   function alternar(nombre: string) {
@@ -209,12 +209,12 @@ export default function OnboardingScreen() {
           <Button
             label={t('onboarding.dispositivoAhora')}
             icono={<Plus size={18} strokeWidth={2} color={colors.textOnFill} />}
-            onPress={() => router.replace('/(tabs)/devices')}
+            onPress={() => router.replace('/(nexum)/dispositivos')}
           />
           <Button
             label={t('acciones.masTarde')}
             variante="secundario"
-            onPress={() => router.replace('/(tabs)')}
+            onPress={() => router.replace('/(nexum)')}
           />
         </>
       )}

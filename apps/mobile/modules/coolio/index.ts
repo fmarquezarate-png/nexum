@@ -1,25 +1,29 @@
 /**
- * Módulo Coolio — climatización por infrarrojos.
+ * Manifiesto de Coolio — climatización por infrarrojos.
  *
- * Estado: estructura creada. Implementación en la fase 2.
- *
- * ⚠ LIMITACIÓN QUE DEBE REFLEJARSE EN TODA LA INTERFAZ DE ESTE MÓDULO ⚠
- *
- * El infrarrojo es UNIDIRECCIONAL. El ESP32 le habla al aire acondicionado,
- * pero no puede leer su estado real. Si alguien usa el mando físico, Nexum
- * no se entera.
- *
- * Consecuencias obligatorias en la interfaz:
- *   1. El estado se muestra SIEMPRE con su marca de tiempo:
- *      "Según el último cambio, hace 2 h".
- *   2. Tiene que haber un botón de RESINCRONIZAR que reenvía el estado
- *      completo al aire.
- *   3. Nunca se presenta el estado como una lectura verificada.
- *   4. La temperatura y humedad del sensor SHT31 SÍ son reales y se
- *      muestran claramente separadas del estado del aire.
- *
- * La tarjeta de "Recomendación IA" del mockup queda FUERA de la fase 1:
- * se deja el hueco en la interfaz, sin lógica detrás.
+ * Es lo único que Nexum sabe de Coolio. Todo lo demás —el dial, los
+ * programas, el emparejado del ESP32— vive dentro de su mundo, en
+ * app/(mundos)/coolio/.
  */
 
-export {};
+import type { ModuleManifest } from '../tipos';
+
+export const manifiesto: ModuleManifest = {
+  id: 'coolio',
+  nombre: 'Coolio',
+  estado: 'disponible',
+  ruta: '/coolio',
+  logo: require('../../assets/marcas/coolio.png'),
+  mascota: require('../../assets/mascotas/airi.png'),
+  tagline: 'Controla tu aire acondicionado.',
+
+  /**
+   * Devuelve null mientras no haya aparatos emparejados: el emparejado
+   * real llega con la fase 2. Y null significa que Nexum no dibuja NADA
+   * de Coolio en su portada, que es justo lo que debe pasar cuando no
+   * tienes ningún aire.
+   */
+  async resumenDeHogar() {
+    return null;
+  },
+};

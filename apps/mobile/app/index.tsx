@@ -21,7 +21,7 @@ const CLAVE_OMITIDO = 'nexum.onboarding.omitido';
  *
  *   sin sesión           → (auth)/sign-in
  *   con sesión, 0 casas  → onboarding
- *   con sesión, ≥1 casa  → (tabs)
+ *   con sesión, ≥1 casa  → (nexum)
  *
  * ⚠ El estado de error es imprescindible. Antes, si fallaba la red, se
  * daba por hecho que el usuario no tenía casas y se le mandaba al
@@ -64,7 +64,7 @@ export default function Index() {
   if (estado.tipo === 'cargando') return <Centro><Loading texto={t('app.cargando')} /></Centro>;
 
   const alAsistente = !estado.tieneCasa && !estado.omitido;
-  return <Redirect href={alAsistente ? '/onboarding' : '/(tabs)'} />;
+  return <Redirect href={alAsistente ? '/onboarding' : '/(nexum)'} />;
 }
 
 function Centro({ children }: { children: React.ReactNode }) {

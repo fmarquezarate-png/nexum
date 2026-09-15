@@ -249,7 +249,20 @@
     "swing": "Dirección",
     "timer": "Temporizador",
     "indoorTemp": "Interior",
-    "humidity": "Humedad"
+    "humidity": "Humedad",
+    "equipos": "Equipos",
+    "programas": "Programas",
+    "vacioTitulo": "Todavía no hay ningún equipo aquí",
+    "vacioTexto": "Conecta tu primer aire acondicionado y contrólalo desde el móvil.",
+    "vacioBoton": "Añadir un equipo",
+    "programasVacioTitulo": "Los programas llegan con tu primer equipo",
+    "programasVacioTexto": "Aquí podrás decidir a qué hora se enciende el aire y a qué temperatura.",
+    "statsVacioTitulo": "Aquí verás cuánto usas el aire",
+    "statsVacioTexto": "Necesitas al menos un equipo para empezar a medir.",
+    "ajustesUnidades": "Unidades",
+    "ajustesAvisos": "Avisos",
+    "ajustesAcerca": "Acerca de Coolio",
+    "anadirTitulo": "Añadir un equipo"
   },
   "proximamente": {
     "etiqueta": "Próximamente",
@@ -279,8 +292,12 @@
     "misDispositivos": "Mis dispositivos",
     "verTodos": "Ver todos",
     "sinDispositivosTitulo": "Tu casa está lista y vacía",
-    "sinDispositivosTexto": "Cuando conectes tu primer aparato aparecerá aquí, con su estado en vivo.",
-    "casaActiva": "Casa"
+    "sinDispositivosTexto": "Conecta tu primer aparato y aparecerá aquí, con su estado en vivo.",
+    "casaActiva": "Casa",
+    "appsIntegradas": "Apps integradas",
+    "masPorVenir": "Y más por venir…",
+    "gestionarCasas": "Gestionar mis casas",
+    "pronto": "Pronto"
   },
   "emparejar": {
     "titulo": "Añadir dispositivo",
@@ -291,5 +308,53 @@
       "Le dices cuál es tu WiFi de casa desde el móvil",
       "Eliges en qué habitación está y listo"
     ]
+  },
+  "automatizaciones": {
+    "titulo": "Automatizaciones",
+    "vacioTitulo": "Todavía no hay automatizaciones",
+    "vacioTexto": "Haz que tu casa reaccione sola: una temperatura al llegar, el riego cuando toque.",
+    "sinDispositivos": "Necesitas al menos un dispositivo.",
+    "crear": "Crear una automatización"
+  },
+  "estadisticas": {
+    "titulo": "Estadísticas",
+    "vacioTitulo": "Aquí verás cómo va tu casa",
+    "vacioTexto": "En cuanto lleve unos días funcionando, aparecerán el consumo y el clima."
+  },
+  "modulo": {
+    "avisoLlegada": "Te avisaremos en cuanto esté lista.",
+    "plantico": {
+      "mensaje": "¡Hola! Soy Broti. Todavía estoy aprendiendo a regar, pero ya queda menos.",
+      "queHara": "Qué podrás hacer con Plantico",
+      "detalle": "Conectar la bomba y el sensor de humedad de cada maceta, decidir cuándo se riega según la tierra y el clima, y ver el historial de cada planta."
+    },
+    "coolio": {
+      "mensaje": "Soy Airi y ya estoy lista para cuidar tu clima.",
+      "queHara": "Qué puedes hacer con Coolio",
+      "detalle": "Controlar tu aire acondicionado desde el móvil, estés donde estés."
+    }
+  },
+  "anadirDispositivo": {
+    "titulo": "¿Qué quieres añadir?",
+    "texto": "Cada app conecta sus propios aparatos.",
+    "nota": "Si no ves la tuya, todavía no está disponible."
+  },
+  "futuro": {
+    "iluminacion": {
+      "nombre": "Iluminación",
+      "linea": "Controla tus luces."
+    },
+    "seguridad": {
+      "nombre": "Seguridad",
+      "linea": "Tu hogar más seguro."
+    },
+    "energia": {
+      "nombre": "Energía",
+      "linea": "Monitorea y ahorra."
+    },
+    "ideas": {
+      "nombre": "Nuevas ideas",
+      "linea": "Tú imaginas, Nexum lo hace posible."
+    }
   }
 }

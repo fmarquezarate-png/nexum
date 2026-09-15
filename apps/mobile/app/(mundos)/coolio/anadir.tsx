@@ -15,7 +15,7 @@ export default function EmparejarScreen() {
   return (
     <Screen title={t('emparejar.titulo')}>
       <Proximamente
-        quien="nexi"
+        quien="airi"
         titulo={t('emparejar.proximoTitulo')}
         mensaje={t('emparejar.proximoMensaje')}
         incluye={tList('emparejar.incluye')}

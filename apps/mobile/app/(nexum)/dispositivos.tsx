@@ -110,7 +110,7 @@ export default function DevicesScreen() {
       <Button
         label={t('dispositivos.anadir')}
         variante="secundario"
-        onPress={() => router.push('/emparejar')}
+        onPress={() => router.push('/anadir-dispositivo')}
         icono={<Plus size={18} strokeWidth={2} />}
       />
     </Screen>
