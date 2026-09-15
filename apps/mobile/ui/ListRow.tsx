@@ -1,77 +1,113 @@
+import { ChevronRight } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { HIT_TARGET, colors, radius, spacing, typography } from './tokens';
+import { useTheme } from './ThemeProvider';
+import { layout, radius, spacing, typography } from './tokens';
+import { PressableAnimado, usePressScale } from './usePressScale';
 
 interface ListRowProps {
   titulo: string;
   subtitulo?: string;
-  /** Algo a la derecha: una etiqueta, un interruptor, una flecha. */
+  /** Icono a la izquierda, normalmente dentro de un IconTile. */
+  izquierda?: ReactNode;
+  /** Algo a la derecha: una etiqueta, un interruptor. */
   derecha?: ReactNode;
+  /**
+   * Qué pasa al tocar la fila. REGLA: tocar SIEMPRE abre o selecciona,
+   * NUNCA borra. Las acciones destructivas viven dentro, nunca en el
+   * gesto más fácil de hacer sin querer.
+   */
   onPress?: () => void;
+  /** Muestra la flecha de "esto se abre". Solo si hay onPress. */
+  flecha?: boolean;
 }
 
-/** Fila pulsable de una lista. Se usa en Ajustes, casas, miembros y códigos. */
-export function ListRow({ titulo, subtitulo, derecha, onPress }: ListRowProps) {
-  const Contenido = (
-    <View style={styles.fila}>
+export function ListRow({
+  titulo,
+  subtitulo,
+  izquierda,
+  derecha,
+  onPress,
+  flecha = true,
+}: ListRowProps) {
+  const { colors } = useTheme();
+  const { animatedStyle, onPressIn, onPressOut } = usePressScale(0.985);
+
+  const contenido = (
+    <>
+      {izquierda}
       <View style={styles.textos}>
-        <Text style={styles.titulo} numberOfLines={1}>
+        <Text style={[typography.cardTitle, { color: colors.text }]} numberOfLines={1}>
           {titulo}
         </Text>
         {subtitulo ? (
-          <Text style={styles.subtitulo} numberOfLines={2}>
+          <Text style={[typography.caption, { color: colors.textSecondary }]} numberOfLines={2}>
             {subtitulo}
           </Text>
         ) : null}
       </View>
-      {derecha ? <View style={styles.derecha}>{derecha}</View> : null}
-    </View>
+      {derecha}
+      {onPress && flecha ? <ChevronRight size={18} strokeWidth={2} color={colors.textFaint} /> : null}
+    </>
   );
 
-  if (!onPress) return Contenido;
+  if (!onPress) return <View style={styles.fila}>{contenido}</View>;
 
   return (
-    <Pressable
+    <PressableAnimado
       onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       accessibilityRole="button"
-      style={({ pressed }) => pressed && styles.pulsada}
+      style={[styles.fila, animatedStyle]}
     >
-      {Contenido}
-    </Pressable>
+      {contenido}
+    </PressableAnimado>
   );
 }
 
+type Tono = 'neutro' | 'ok' | 'aviso' | 'error' | 'marca';
+
 /** Etiqueta pequeña de color. Para roles, estados y caducidades. */
-export function Badge({ texto, tono = 'neutro' }: { texto: string; tono?: 'neutro' | 'ok' | 'aviso' | 'error' }) {
-  return <Text style={[styles.badge, tonos[tono]]}>{texto}</Text>;
+export function Badge({ texto, tono = 'neutro' }: { texto: string; tono?: Tono }) {
+  const { colors } = useTheme();
+
+  const tonos: Record<Tono, { fondo: string; texto: string }> = {
+    neutro: { fondo: colors.surfaceSunken, texto: colors.textSecondary },
+    ok: { fondo: colors.successSoft, texto: colors.success },
+    aviso: { fondo: colors.warningSoft, texto: colors.warning },
+    error: { fondo: colors.dangerSoft, texto: colors.danger },
+    marca: { fondo: colors.brandSoft, texto: colors.brand },
+  };
+  const t = tonos[tono];
+
+  return (
+    <Text
+      style={[
+        typography.label,
+        styles.badge,
+        { backgroundColor: t.fondo, color: t.texto },
+      ]}
+    >
+      {texto}
+    </Text>
+  );
 }
 
 const styles = StyleSheet.create({
   fila: {
-    minHeight: HIT_TARGET,
+    minHeight: layout.rowHeight,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     paddingVertical: spacing.md,
   },
-  pulsada: { opacity: 0.6 },
-  textos: { flex: 1, gap: 2 },
-  titulo: { ...typography.bodyStrong, color: colors.text },
-  subtitulo: { ...typography.caption, color: colors.textMuted },
-  derecha: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  textos: { flex: 1, gap: spacing.xxs },
   badge: {
-    ...typography.label,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     borderRadius: radius.pill,
     overflow: 'hidden',
   },
-});
-
-const tonos = StyleSheet.create({
-  neutro: { color: colors.textMuted, backgroundColor: colors.surfaceAlt },
-  ok: { color: '#1C6B3E', backgroundColor: '#DCF0E4' },
-  aviso: { color: '#8A6318', backgroundColor: '#FAEFD6' },
-  error: { color: '#8F2F1E', backgroundColor: '#F8DFDA' },
 });

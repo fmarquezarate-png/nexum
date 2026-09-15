@@ -1,127 +1,379 @@
+import type { TextStyle } from 'react-native';
+
 /**
- * Design system de Nexum — los "tokens".
+ * Nexum — tokens de diseño.
  *
- * Un token es un valor con nombre: en vez de escribir '#1E5B45' en veinte
- * sitios, escribes colors.brand.primary. El día que cambie el verde, se
- * cambia aquí y cambia en toda la app.
+ * Un token es un valor con nombre. En vez de escribir '#1E5B45' en veinte
+ * sitios, se escribe colors.brand. El día que cambie el verde, cambia aquí
+ * y cambia en toda la app. Es la misma idea que una medida de Power BI:
+ * la fórmula vive en un sitio y todos los visuales la usan.
  *
- * Es exactamente la misma idea que una medida DAX: la fórmula vive en un
- * sitio y todos los visuales la usan.
+ * REGLAS
+ *   1. En una pantalla NUNCA aparece un color escrito a mano ni un número
+ *      de espaciado suelto. Todo sale de aquí.
+ *   2. Los componentes consumen `colors` (semánticos) a través de useTheme().
+ *      NUNCA importan de `palette`, que son los valores crudos.
+ *   3. Ningún componente pregunta en qué modo está. Si necesita saberlo,
+ *      es que falta un token.
  *
- * REGLA: en el código de las pantallas no debe aparecer NUNCA un color
- * escrito a mano ni un número de espaciado suelto. Siempre desde aquí.
- *
- * Paleta tomada de los mockups de Nexum, Coolio y Plantico.
+ * Especificación completa y razonada: docs/diseno/01-lenguaje-visual.md
  */
 
-// ─── Colores base (los comparte toda la app) ─────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  Paleta base — valores crudos. Solo para construir `colors`.
+// ═══════════════════════════════════════════════════════════════════
 
-export const palette = {
-  /** Verde Nexum, del logo de la casa con la hoja. */
-  green900: '#0F2F23',
-  green700: '#14402F',
-  green600: '#1E5B45',
-  green500: '#2A7659',
-  green100: '#E3EDE7',
-
-  /** Cyan Coolio, de las ondas del logo. */
-  cyan700: '#0E2748',
-  cyan500: '#21B6E0',
-  cyan300: '#7FD7EF',
-  cyan100: '#E9F7FC',
-
-  /** Verde y agua de Plantico. */
-  leaf600: '#2F7A57',
-  water500: '#3BA7D6',
-  leaf100: '#EBF2EC',
-
-  /** Neutros. El fondo crema es la seña de identidad de Nexum. */
-  cream: '#F5F2EC',
+const palette = {
+  // Cálidos: el crema de Nexum
+  warm50: '#FDFCFA',
+  warm100: '#FAF8F4',
+  warm200: '#F2EFE9',
+  warm300: '#E8E3D9',
+  warm400: '#D8D2C6',
   white: '#FFFFFF',
-  ink: '#14201B',
-  inkMuted: '#6E7D76',
-  inkFaint: '#9AA6A0',
-  border: '#E5E0D6',
 
-  /** Estados. */
-  success: '#2E9E5B',
-  warning: '#E0A93B',
-  danger: '#D2553F',
-  offline: '#9AA6A0',
+  // Tintas: el verde-negro del logotipo
+  ink900: '#101C17',
+  ink700: '#33443C',
+  ink500: '#5C6B63',
+  ink400: '#7A8880',
+  ink300: '#A6B0AA',
+
+  // Verde Nexum
+  green900: '#0C2B20',
+  green800: '#10382A',
+  green600: '#1E5B45',
+  green500: '#2E7D5B',
+  green200: '#CADCD2',
+  green100: '#E4EDE8',
+
+  // Cyan Coolio
+  cyan800: '#0E2748',
+  cyan600: '#1687B8',
+  cyan500: '#1F9FD4',
+  cyan300: '#7FD3EA',
+  cyan100: '#E6F4FB',
+
+  // Plantico
+  leaf600: '#2E7D57',
+  water500: '#3FA9D6',
+  leaf100: '#E9F2EC',
+
+  // Estados
+  success600: '#2E9E5B',
+  success100: '#DCF0E4',
+  warning600: '#C98A14',
+  warning100: '#FAEFD6',
+  danger600: '#C8503A',
+  danger100: '#FBE7E2',
+
+  /** Tinte de todas las sombras. Cálido, nunca negro puro. */
+  shadowInk: '#1C2B24',
 } as const;
 
-// ─── Colores semánticos ──────────────────────────────────────────────
-// Se usan estos, no los de arriba: dicen PARA QUÉ sirve el color, no
-// cuál es. Así, cuando llegue el modo oscuro, solo cambia este bloque.
+// ═══════════════════════════════════════════════════════════════════
+//  Colores semánticos — lo único que consumen los componentes
+// ═══════════════════════════════════════════════════════════════════
 
-export const colors = {
-  background: palette.cream,
+/**
+ * El contrato de color. Ambos modos declaran exactamente estas claves,
+ * así TypeScript avisa si al añadir un color se olvida el modo oscuro.
+ */
+export interface Colors {
+  canvas: string;
+  surface: string;
+  surfaceElevated: string;
+  surfaceSunken: string;
+  surfaceAccent: string;
+
+  divider: string;
+  borderInput: string;
+  borderStrong: string;
+  cardBorderWidth: number;
+  cardBorder: string;
+
+  scrim: string;
+
+  text: string;
+  textSecondary: string;
+  textMuted: string;
+  textFaint: string;
+  textOnFill: string;
+
+  brand: string;
+  brandFill: string;
+  brandPressed: string;
+  brandSoft: string;
+  brandInk: string;
+
+  success: string;
+  successSoft: string;
+  warning: string;
+  warningSoft: string;
+  danger: string;
+  dangerSoft: string;
+  offline: string;
+
+  shadowInk: string;
+}
+
+export const lightColors: Colors = {
+  canvas: palette.warm100,
   surface: palette.white,
-  surfaceAlt: palette.green100,
-  border: palette.border,
+  surfaceElevated: palette.white,
+  surfaceSunken: palette.warm200,
+  surfaceAccent: palette.green100,
 
-  text: palette.ink,
-  textMuted: palette.inkMuted,
-  textFaint: palette.inkFaint,
-  textOnBrand: palette.white,
+  divider: palette.warm300,
+  borderInput: palette.warm300,
+  borderStrong: palette.warm400,
+  /** En claro la sombra ya separa la tarjeta; el borde sobraría. */
+  cardBorderWidth: 0,
+  cardBorder: 'transparent',
+
+  scrim: '#101C17B3',
+
+  text: palette.ink900,
+  textSecondary: palette.ink500,
+  /** Ratio 4.0:1 — solo a 15 pt o más. */
+  textMuted: palette.ink400,
+  /** Decorativo. Nunca texto informativo. */
+  textFaint: palette.ink300,
+  textOnFill: palette.white,
 
   brand: palette.green600,
-  brandDark: palette.green700,
+  brandFill: palette.green600,
+  brandPressed: palette.green800,
+  brandSoft: palette.green100,
+  brandInk: palette.green900,
 
-  success: palette.success,
-  warning: palette.warning,
-  danger: palette.danger,
-  offline: palette.offline,
-} as const;
+  success: palette.success600,
+  successSoft: palette.success100,
+  warning: palette.warning600,
+  warningSoft: palette.warning100,
+  danger: palette.danger600,
+  dangerSoft: palette.danger100,
+  offline: palette.ink300,
 
-// ─── Espaciado ───────────────────────────────────────────────────────
-// Escala de 4 en 4. Todos los márgenes salen de aquí: así nada queda
-// "casi alineado".
+  shadowInk: palette.shadowInk,
+};
+
+/**
+ * Modo oscuro.
+ *
+ * El fondo NO es gris: mantiene el matiz cálido de la marca con el color
+ * subido, porque a poca luz el ojo pierde sensibilidad al croma y un gris
+ * neutro se percibe muerto.
+ *
+ * Los acentos suben luminancia y BAJAN saturación. Subir solo la
+ * luminancia es lo que produce el efecto chillón.
+ */
+export const darkColors: Colors = {
+  canvas: '#100F0B',
+  surface: '#211E17',
+  surfaceElevated: '#2B2721',
+  surfaceSunken: '#0B0A07',
+  surfaceAccent: '#15261C',
+
+  divider: '#2E2A22',
+  borderInput: '#38332A',
+  borderStrong: '#443E33',
+  /** En oscuro la sombra es invisible: el borde es lo único que separa. */
+  cardBorderWidth: 1,
+  cardBorder: '#38332A',
+
+  scrim: '#000000CC',
+
+  text: '#EDEAE3',
+  textSecondary: '#B3ACA0',
+  textMuted: '#918A7E',
+  textFaint: '#6B6459',
+  textOnFill: '#FFFFFF',
+
+  brand: '#4FAE84',
+  brandFill: '#2E7D5B',
+  brandPressed: '#276A4D',
+  brandSoft: '#15261C',
+  brandInk: '#3E9773',
+
+  success: '#5CBF83',
+  successSoft: '#16281D',
+  warning: '#E0B152',
+  warningSoft: '#2A2213',
+  danger: '#E8806A',
+  dangerSoft: '#2C1A15',
+  offline: '#6B6459',
+
+  shadowInk: '#000000',
+};
+
+export type Scheme = 'light' | 'dark';
+
+// ═══════════════════════════════════════════════════════════════════
+//  Espaciado — escala de 4
+// ═══════════════════════════════════════════════════════════════════
 
 export const spacing = {
+  xxs: 2,
   xs: 4,
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 24,
-  xxl: 32,
-  xxxl: 48,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  huge: 48,
 } as const;
 
-// ─── Bordes redondeados ──────────────────────────────────────────────
+/** Medidas de maquetación. Se usan tal cual, no se recalculan. */
+export const layout = {
+  /** Margen lateral de TODA pantalla. */
+  screenPaddingH: 20,
+  screenPaddingTop: 12,
+  /** Entre tarjetas de una misma lista. */
+  cardGap: 12,
+  /** Entre bloques con cabecera. */
+  sectionGap: 28,
+  cardPadding: 18,
+  cardPaddingCompact: 14,
+  rowHeight: 56,
+  rowHeightCompact: 48,
+  /** Mínimo pulsable. Por debajo de 44 se falla al tocar. */
+  hitTarget: 44,
+  /** Aire al final del scroll para no quedar bajo la barra de pestañas. */
+  scrollBottom: 96,
+  tabBarHeight: 56,
+} as const;
+
+// ═══════════════════════════════════════════════════════════════════
+//  Radios
+// ═══════════════════════════════════════════════════════════════════
 
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  xs: 8,
+  sm: 12,
+  md: 14,
+  lg: 18,
+  /** Tarjeta estándar. */
+  card: 22,
+  /** Hoja modal, contenedor de dial. */
+  sheet: 28,
   pill: 999,
 } as const;
 
-// ─── Tipografía ──────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  Sombras — tres niveles y ni uno más
+// ═══════════════════════════════════════════════════════════════════
 
+export interface Sombra {
+  shadowColor: string;
+  shadowOpacity: number;
+  shadowRadius: number;
+  shadowOffset: { width: number; height: number };
+  elevation: number;
+}
+
+/**
+ * En oscuro las sombras no se desactivan: se reducen a cero. Así ningún
+ * componente tiene que preguntar en qué modo está.
+ */
+export function shadowsFor(scheme: Scheme): Record<'subtle' | 'card' | 'raised', Sombra> {
+  const tinte = scheme === 'dark' ? '#000000' : palette.shadowInk;
+  const oscuro = scheme === 'dark';
+
+  return {
+    subtle: {
+      shadowColor: tinte,
+      shadowOpacity: oscuro ? 0 : 0.04,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: oscuro ? 0 : 1,
+    },
+    card: {
+      shadowColor: tinte,
+      shadowOpacity: oscuro ? 0 : 0.07,
+      shadowRadius: 18,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: oscuro ? 0 : 3,
+    },
+    raised: {
+      shadowColor: tinte,
+      shadowOpacity: oscuro ? 0 : 0.1,
+      shadowRadius: 28,
+      shadowOffset: { width: 0, height: 12 },
+      elevation: oscuro ? 0 : 8,
+    },
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Tipografía
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * TODOS los estilos llevan interlineado explícito. No tenerlo era el
+ * motivo principal de que la interfaz pareciera sin jerarquía.
+ *
+ * Se usa la letra del sistema (San Francisco en iOS, Roboto en Android).
+ * No se carga una fuente propia: la personalidad la dan el color, el
+ * radio y la sombra, y una fuente descargable añade peso y parpadeo.
+ */
 export const typography = {
-  display: { fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
-  title: { fontSize: 24, fontWeight: '700' },
-  heading: { fontSize: 18, fontWeight: '600' },
-  body: { fontSize: 16, fontWeight: '400' },
-  bodyStrong: { fontSize: 16, fontWeight: '600' },
-  caption: { fontSize: 13, fontWeight: '400' },
-  label: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4 },
-} as const;
-
-// ─── Sombras ─────────────────────────────────────────────────────────
-// iOS y Android usan sistemas distintos, por eso van los dos valores.
-
-export const shadow = {
-  card: {
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+  /** Dato protagonista: el 24°C del dial. UNO por pantalla. */
+  dataHero: {
+    fontSize: 56,
+    lineHeight: 60,
+    fontWeight: '700',
+    letterSpacing: -1.6,
+    // Sin cifras de ancho fijo el número baila al pasar de 9 a 24.
+    fontVariant: ['tabular-nums'],
+    includeFontPadding: false,
   },
+  dataHeroUnit: { fontSize: 24, lineHeight: 28, fontWeight: '600', letterSpacing: -0.4 },
+  dataL: { fontSize: 34, lineHeight: 38, fontWeight: '700', letterSpacing: -0.8, fontVariant: ['tabular-nums'] },
+  dataM: { fontSize: 22, lineHeight: 26, fontWeight: '700', letterSpacing: -0.3, fontVariant: ['tabular-nums'] },
+
+  display: { fontSize: 30, lineHeight: 36, fontWeight: '700', letterSpacing: -0.6 },
+  title: { fontSize: 24, lineHeight: 30, fontWeight: '700', letterSpacing: -0.4 },
+  section: { fontSize: 18, lineHeight: 24, fontWeight: '600', letterSpacing: -0.2 },
+  cardTitle: { fontSize: 16, lineHeight: 22, fontWeight: '600' },
+
+  body: { fontSize: 15, lineHeight: 22, fontWeight: '400' },
+  bodyStrong: { fontSize: 15, lineHeight: 22, fontWeight: '600' },
+  caption: { fontSize: 13, lineHeight: 18, fontWeight: '400' },
+  captionStrong: { fontSize: 13, lineHeight: 18, fontWeight: '600' },
+  label: { fontSize: 11, lineHeight: 14, fontWeight: '600', letterSpacing: 0.6 },
+  tabLabel: { fontSize: 10, lineHeight: 13, fontWeight: '600', letterSpacing: 0.2 },
+} satisfies Record<string, TextStyle>;
+
+// ═══════════════════════════════════════════════════════════════════
+//  Movimiento
+// ═══════════════════════════════════════════════════════════════════
+
+export const duration = {
+  /** Respuesta al dedo. */
+  instant: 90,
+  fast: 140,
+  base: 200,
+  slow: 280,
+  screen: 320,
+  data: 400,
 } as const;
 
-/** Ancho mínimo de cualquier zona pulsable. Por debajo de 44 px se falla al tocar. */
-export const HIT_TARGET = 44;
+/**
+ * Curvas. Nada de lineal (se percibe mecánico) ni de rebote en ningún
+ * sitio: el único muelle permitido es `press`, calibrado para no producir
+ * sobreimpulso visible.
+ */
+export const easing = {
+  standard: [0.2, 0, 0, 1] as const,
+  decelerate: [0.05, 0.7, 0.1, 1] as const,
+  accelerate: [0.3, 0, 1, 1] as const,
+  press: { damping: 18, stiffness: 320, mass: 1 } as const,
+} as const;
+
+/** Escala a la que encoge un elemento al pulsarlo. */
+export const PRESS_SCALE = 0.97;
+
+/** Compatibilidad con el código anterior. Usar layout.hitTarget. */
+export const HIT_TARGET = layout.hitTarget;

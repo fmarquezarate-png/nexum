@@ -1,45 +1,77 @@
 import { router, useFocusEffect } from 'expo-router';
+import { Plus } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 
 import { listarCasas, type CasaConRol } from '@/core/homes';
 import { t } from '@/lib/i18n';
-import { EmptyState, HIT_TARGET, Screen, colors, radius, spacing, typography } from '@/ui';
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  Loading,
+  PressableAnimado,
+  Screen,
+  layout,
+  radius,
+  spacing,
+  typography,
+  useTheme,
+  usePressScale,
+} from '@/ui';
+
+type Estado =
+  | { tipo: 'cargando' }
+  | { tipo: 'listo'; casas: CasaConRol[] }
+  | { tipo: 'error' };
 
 /**
  * Dispositivos, agrupados por casa y habitación.
  *
- * Arriba el selector de casa ("Mi Casa / Casa Ana" del mockup). La lista
- * de aparatos llega en la fase 2: ahora mismo siempre está vacía porque
- * todavía no se puede emparejar nada.
+ * La lista de aparatos llega en la fase 2: hasta que se pueda emparejar
+ * un ESP32 siempre estará vacía, y eso hay que decirlo sin que parezca
+ * un fallo.
  */
 export default function DevicesScreen() {
-  const [casas, setCasas] = useState<CasaConRol[] | null>(null);
+  const [estado, setEstado] = useState<Estado>({ tipo: 'cargando' });
   const [activa, setActiva] = useState<string | null>(null);
 
   const cargar = useCallback(() => {
     listarCasas()
-      .then((cs) => {
-        setCasas(cs);
-        setActiva((prev) => prev ?? cs[0]?.id ?? null);
+      .then((casas) => {
+        setEstado({ tipo: 'listo', casas });
+        setActiva((prev) => prev ?? casas[0]?.id ?? null);
       })
-      .catch(() => setCasas([]));
+      .catch(() => setEstado({ tipo: 'error' }));
   }, []);
 
   useFocusEffect(cargar);
 
-  if (casas === null) {
+  if (estado.tipo === 'cargando') {
     return (
       <Screen title={t('tabs.devices')}>
-        <ActivityIndicator color={colors.brand} />
+        <Loading />
       </Screen>
     );
   }
 
-  if (casas.length === 0) {
+  if (estado.tipo === 'error') {
+    return (
+      <Screen title={t('tabs.devices')}>
+        <ErrorState
+          titulo={t('errores.cargar')}
+          detalle={t('errores.cargarDetalle')}
+          onReintentar={cargar}
+        />
+      </Screen>
+    );
+  }
+
+  if (estado.casas.length === 0) {
     return (
       <Screen title={t('tabs.devices')}>
         <EmptyState
+          quien="nexi"
           titulo={t('casas.vaciaTitulo')}
           descripcion={t('casas.vaciaTexto')}
           accion={{ label: t('casas.crear'), onPress: () => router.push('/casas') }}
@@ -50,52 +82,87 @@ export default function DevicesScreen() {
 
   return (
     <Screen title={t('tabs.devices')}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.selector}
-      >
-        {casas.map((c) => (
-          <Pressable
-            key={c.id}
-            onPress={() => setActiva(c.id)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: c.id === activa }}
-            style={({ pressed }) => [
-              styles.pastilla,
-              c.id === activa && styles.pastillaActiva,
-              pressed && styles.pulsada,
-            ]}
-          >
-            <Text style={[styles.pastillaTexto, c.id === activa && styles.pastillaTextoActivo]}>
-              {c.name}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      {estado.casas.length > 1 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.selector}
+        >
+          {estado.casas.map((c) => (
+            <Pastilla
+              key={c.id}
+              texto={c.name}
+              activa={c.id === activa}
+              onPress={() => setActiva(c.id)}
+            />
+          ))}
+        </ScrollView>
+      ) : null}
 
       <EmptyState
+        quien="nexi"
         titulo={t('dispositivos.vacioTitulo')}
         descripcion={t('dispositivos.vacioTexto')}
-        accion={{ label: t('dispositivos.anadir'), onPress: () => router.push('/onboarding') }}
+      />
+
+      <Button
+        label={t('dispositivos.anadir')}
+        variante="secundario"
+        onPress={() => router.push('/onboarding')}
+        icono={<Plus size={18} strokeWidth={2} />}
       />
     </Screen>
   );
 }
 
+function Pastilla({
+  texto,
+  activa,
+  onPress,
+}: {
+  texto: string;
+  activa: boolean;
+  onPress: () => void;
+}) {
+  const { colors, shadow } = useTheme();
+  const { animatedStyle, onPressIn, onPressOut } = usePressScale();
+
+  return (
+    <PressableAnimado
+      onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: activa }}
+      style={[
+        styles.pastilla,
+        {
+          backgroundColor: activa ? colors.brandFill : colors.surface,
+          borderColor: activa ? colors.brandFill : colors.borderStrong,
+        },
+        !activa && shadow.subtle,
+        animatedStyle,
+      ]}
+    >
+      <Text
+        style={[
+          typography.captionStrong,
+          { color: activa ? colors.textOnFill : colors.textSecondary },
+        ]}
+      >
+        {texto}
+      </Text>
+    </PressableAnimado>
+  );
+}
+
 const styles = StyleSheet.create({
-  selector: { gap: spacing.sm, paddingVertical: spacing.sm, paddingRight: spacing.lg },
+  selector: { gap: spacing.sm, paddingVertical: spacing.xs, paddingRight: layout.screenPaddingH },
   pastilla: {
-    minHeight: HIT_TARGET,
+    minHeight: layout.hitTarget,
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  pastillaActiva: { backgroundColor: colors.brand, borderColor: colors.brand },
-  pulsada: { opacity: 0.7 },
-  pastillaTexto: { ...typography.body, color: colors.text },
-  pastillaTextoActivo: { color: colors.textOnBrand, fontWeight: '600' },
 });

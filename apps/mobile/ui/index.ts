@@ -1,15 +1,25 @@
-/** Punto de entrada del design system. Importar siempre desde aquí. */
+/** Punto de entrada del sistema de diseño. Importar siempre desde aquí. */
 
 export * from './tokens';
 export * from './theme';
+export { ThemeProvider, useTheme, type PreferenciaTema } from './ThemeProvider';
+export { PressableAnimado, usePressScale } from './usePressScale';
+export * from './haptics';
+
 export { Screen } from './Screen';
 export { Card } from './Card';
-export { Placeholder } from './Placeholder';
 export { Button } from './Button';
 export { TextField } from './TextField';
+export { Divider } from './Divider';
+export { IconTile } from './IconTile';
+export { ListRow, Badge } from './ListRow';
+export { SegmentedControl } from './SegmentedControl';
 export { Mascota, type MascotaId } from './Mascota';
 export { Burbuja } from './Burbuja';
 export { Saludo } from './Saludo';
 export { EmptyState } from './EmptyState';
-export { ListRow, Badge } from './ListRow';
-export { Divider } from './Divider';
+export { ErrorState } from './ErrorState';
+export { Loading } from './Loading';
+export { Proximamente } from './Proximamente';
+export { ConfirmSheet } from './ConfirmSheet';
+export { ToastProvider, useAviso } from './Toast';

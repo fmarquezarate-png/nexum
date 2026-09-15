@@ -1,6 +1,4 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
-
-import { colors, spacing, typography } from './tokens';
+import { Image, StyleSheet, View } from 'react-native';
 
 /** Las tres mascotas de la casa. Ver brand/README.md. */
 const IMAGENES = {
@@ -11,20 +9,17 @@ const IMAGENES = {
 
 export type MascotaId = keyof typeof IMAGENES;
 
-interface MascotaProps {
-  quien?: MascotaId;
-  /** Lo que "dice". Va debajo, centrado. */
-  mensaje?: string;
-  tamano?: number;
-}
-
 /**
- * Mascota con un mensaje opcional.
+ * REGLA DE USO (docs/diseno/02-experiencia-de-uso.md):
  *
- * Se usa donde una pantalla vacía resultaría fría: el asistente de alta,
- * las listas sin nada todavía, los errores sin salida.
+ *   Aparece cuando la app PIDE o EXPLICA algo.
+ *   Nunca mientras el usuario trabaja.
+ *   Una por pantalla y una por recorrido.
+ *   NUNCA en una confirmación de borrado ni en un error con solución.
+ *
+ * Una mascota en cada pantalla deja de ser simpática en dos días.
  */
-export function Mascota({ quien = 'nexi', mensaje, tamano = 140 }: MascotaProps) {
+export function Mascota({ quien = 'nexi', tamano = 140 }: { quien?: MascotaId; tamano?: number }) {
   return (
     <View style={styles.caja}>
       <Image
@@ -34,17 +29,10 @@ export function Mascota({ quien = 'nexi', mensaje, tamano = 140 }: MascotaProps)
         accessible
         accessibilityLabel={`Mascota ${quien}`}
       />
-      {mensaje ? <Text style={styles.mensaje}>{mensaje}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  caja: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md },
-  mensaje: {
-    ...typography.body,
-    color: colors.textMuted,
-    textAlign: 'center',
-    maxWidth: 300,
-  },
+  caja: { alignItems: 'center' },
 });

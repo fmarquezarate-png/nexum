@@ -16,7 +16,12 @@
     "copiar": "Copiar",
     "copiado": "Copiado",
     "reintentar": "Reintentar",
-    "cerrar": "Cerrar"
+    "cerrar": "Cerrar",
+    "hecho": "Hecho",
+    "atras": "Atrás",
+    "salir": "Salir",
+    "entendido": "Entendido",
+    "guardado": "Guardado"
   },
   "tabs": {
     "home": "Inicio",
@@ -51,6 +56,10 @@
   },
   "onboarding": {
     "paso": "Paso {{n}} de {{total}}",
+    "salir": "Salir",
+    "salirTitulo": "¿Dejamos esto para luego?",
+    "salirTexto": "No se creará nada. Puedes crear tu casa cuando quieras desde Ajustes.",
+    "salirConfirmar": "Salir del asistente",
     "casaTitulo": "¿Cómo se llama tu casa?",
     "casaNexi": "Empezamos por tu casa. Ponle el nombre que uses para hablar de ella.",
     "casaLabel": "Nombre de la casa",
@@ -58,13 +67,13 @@
     "casaAyuda": "Puedes cambiarlo cuando quieras.",
     "habitacionesTitulo": "¿Qué habitaciones tiene?",
     "habitacionesNexi": "Toca las que tengas. Sirven para saber dónde está cada aparato.",
-    "habitacionOtra": "Otra habitación",
+    "habitacionOtra": "Añadir otra",
     "habitacionNueva": "Nombre de la habitación",
-    "dispositivoTitulo": "¿Añadimos tu primer dispositivo?",
-    "dispositivoNexi": "Ya está tu casa lista. Cuando tengas un aparato a mano, lo damos de alta.",
-    "dispositivoAhora": "Añadir ahora",
+    "resumenTitulo": "¡Tu casa está lista!",
+    "resumenNexi": "Ya tienes {{casa}} preparada. ¿Conectamos un aparato?",
+    "dispositivoAhora": "Añadir un dispositivo",
     "creando": "Creando tu casa…",
-    "errorCrear": "No se ha podido crear la casa. Inténtalo otra vez.",
+    "errorCrear": "No se ha podido crear la casa",
     "errorCrearDetalle": "No se ha podido crear la casa: {{detalle}}"
   },
   "habitaciones": {
@@ -73,7 +82,10 @@
     "cocina": "Cocina",
     "despacho": "Despacho",
     "bano": "Baño",
-    "terraza": "Terraza"
+    "terraza": "Terraza",
+    "borrarTitulo": "Borrar {{nombre}}",
+    "borrarTexto": "Los dispositivos que estén en ella se quedarán sin habitación asignada. No se borra ningún aparato.",
+    "borrarConfirmar": "Borrar la habitación"
   },
   "home": {
     "greeting": "¡Hola, {{name}}!",
@@ -101,14 +113,28 @@
     "crear": "Crear una casa",
     "nueva": "Casa nueva",
     "nombre": "Nombre de la casa",
-    "selector": "Casa",
+    "creada": "Casa creada",
+    "renombrada": "Nombre actualizado",
+    "borrada": "Casa borrada",
+    "salida": "Has salido de la casa",
     "habitaciones": "Habitaciones",
     "habitacionesVacias": "Esta casa todavía no tiene habitaciones.",
+    "habitacionAnadida": "Habitación añadida",
+    "habitacionBorrada": "Habitación borrada",
     "miembros": "Miembros",
     "codigos": "Códigos de invitado",
+    "zonaDelicada": "Zona delicada",
+    "renombrar": "Cambiar el nombre",
     "salirDeCasa": "Salir de esta casa",
+    "salirTitulo": "Salir de {{casa}}",
+    "salirTexto": "Dejarás de ver esta casa y sus dispositivos. Quien la administre puede volver a invitarte.",
+    "salirConfirmar": "Salir de la casa",
     "borrarCasa": "Borrar esta casa",
-    "borrarAviso": "Se borrarán también sus habitaciones, sus dispositivos y su historial. No se puede deshacer."
+    "borrarTitulo": "Borrar {{casa}}",
+    "borrarTexto": "Esto no se puede deshacer. Se borrará todo lo que hay dentro.",
+    "borrarSegunda": "¿De verdad? No hay forma de recuperarlo.",
+    "borrarConfirmar": "Sí, borrar para siempre",
+    "soloOwnerBorra": "Solo quien creó la casa puede borrarla."
   },
   "roles": {
     "owner": "Propietario",
@@ -123,7 +149,11 @@
     "caduca": "Caduca {{fecha}}",
     "permanente": "Acceso permanente",
     "expulsar": "Quitar de la casa",
-    "soloAdmin": "Solo los propietarios y administradores pueden gestionar miembros."
+    "expulsarTitulo": "Quitar a {{nombre}}",
+    "expulsarTexto": "Dejará de ver esta casa y sus dispositivos. Puedes volver a invitarle con un código nuevo.",
+    "expulsarConfirmar": "Quitar de la casa",
+    "expulsado": "{{nombre}} ya no tiene acceso",
+    "soloAdmin": "Solo los propietarios y administradores pueden gestionar miembros y códigos."
   },
   "codigos": {
     "titulo": "Códigos de invitado",
@@ -153,7 +183,8 @@
     "canjearPlaceholder": "NEXUM-XXXXXX",
     "canjearBoton": "Entrar",
     "canjeOk": "¡Listo! Ya tienes acceso.",
-    "canjeOkCaduca": "Tu acceso caduca el {{fecha}}."
+    "canjeOkCaduca": "Tu acceso caduca el {{fecha}}.",
+    "revocado": "Código desactivado"
   },
   "errores": {
     "not_found": "Este código no es válido. Revisa que lo has escrito bien.",
@@ -170,16 +201,31 @@
     "sinConexion": "No hay conexión con el servidor.",
     "deviceOffline": "El dispositivo está sin conexión.",
     "empty_name": "Ponle un nombre a la casa.",
-    "unknown": "Algo no ha ido bien y no sé decirte qué."
+    "unknown": "Algo no ha ido bien y no sé decirte qué.",
+    "cargar": "No hemos podido cargar esto",
+    "cargarDetalle": "Revisa tu conexión a internet. Tus datos siguen a salvo."
   },
   "ajustes": {
+    "titulo": "Ajustes",
+    "tuCuenta": "Tu cuenta",
+    "tusCasas": "Tus casas",
+    "laApp": "La app",
     "perfil": "Perfil",
     "nombreVisible": "Nombre visible",
     "correo": "Correo",
-    "casas": "Casas",
+    "correoFijo": "El correo no se puede cambiar desde aquí.",
+    "casas": "Mis casas",
+    "casasSub": "Habitaciones, miembros e invitaciones",
     "tengoCodigo": "Tengo un código de invitación",
-    "acercaDe": "Acerca de Nexum",
-    "version": "Versión {{v}}"
+    "tengoCodigoSub": "Entra en la casa de otra persona",
+    "apariencia": "Apariencia",
+    "temaAuto": "Automático",
+    "temaClaro": "Claro",
+    "temaOscuro": "Oscuro",
+    "temaAutoSub": "Sigue al sistema de tu móvil",
+    "notificaciones": "Notificaciones",
+    "version": "Nexum {{v}}",
+    "cerrarSesion": "Cerrar sesión"
   },
   "device": {
     "online": "Conectado",
@@ -204,5 +250,36 @@
     "timer": "Temporizador",
     "indoorTemp": "Interior",
     "humidity": "Humedad"
+  },
+  "proximamente": {
+    "etiqueta": "Próximamente",
+    "automatizaciones": {
+      "titulo": "Tu casa, funcionando sola",
+      "mensaje": "Aún no sé hacer esto, pero me estoy preparando.",
+      "incluye": [
+        "Enciende el aire media hora antes de que llegues",
+        "Riega solo cuando la tierra lo pida",
+        "Escenas para cuando sales, llegas o te vas a dormir"
+      ]
+    },
+    "estadisticas": {
+      "titulo": "Lo que pasa en tu casa, en números",
+      "mensaje": "En cuanto haya dispositivos, empiezo a tomar notas.",
+      "incluye": [
+        "Temperatura y humedad de cada habitación, día a día",
+        "Cuántas horas ha estado encendido cada aparato",
+        "En qué momentos gastas más"
+      ]
+    }
+  },
+  "inicio": {
+    "saludo": "¡Hola, {{name}}!",
+    "sinNombre": "¡Hola!",
+    "subtitulo": "Tu hogar en armonía.",
+    "misDispositivos": "Mis dispositivos",
+    "verTodos": "Ver todos",
+    "sinDispositivosTitulo": "Tu casa está lista y vacía",
+    "sinDispositivosTexto": "Cuando conectes tu primer aparato aparecerá aquí, con su estado en vivo.",
+    "casaActiva": "Casa"
   }
 }

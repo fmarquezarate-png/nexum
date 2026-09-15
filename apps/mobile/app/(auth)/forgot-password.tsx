@@ -4,10 +4,11 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '@/core/auth';
 import { t } from '@/lib/i18n';
-import { Button, Card, Screen, TextField, colors, spacing, typography } from '@/ui';
+import { Button, Card, Screen, TextField, spacing, typography, useTheme } from '@/ui';
 
 export default function ForgotPasswordScreen() {
   const { recuperarPassword } = useAuth();
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
@@ -29,7 +30,9 @@ export default function ForgotPasswordScreen() {
     <Screen title={t('auth.recuperarTitulo')} subtitle={t('auth.recuperarExplicacion')}>
       {enviado ? (
         <Card>
-          <Text style={styles.ok}>{t('auth.recuperarEnviado')}</Text>
+          <Text style={[typography.body, { color: colors.text }]}>
+            {t('auth.recuperarEnviado')}
+          </Text>
         </Card>
       ) : (
         <View style={styles.formulario}>
@@ -47,7 +50,10 @@ export default function ForgotPasswordScreen() {
         </View>
       )}
 
-      <Link href="/(auth)/sign-in" style={styles.enlace}>
+      <Link
+        href="/(auth)/sign-in"
+        style={[typography.bodyStrong, styles.enlace, { color: colors.brand }]}
+      >
         {t('acciones.volver')}
       </Link>
     </Screen>
@@ -56,11 +62,5 @@ export default function ForgotPasswordScreen() {
 
 const styles = StyleSheet.create({
   formulario: { gap: spacing.lg },
-  ok: { ...typography.body, color: colors.text },
-  enlace: {
-    ...typography.bodyStrong,
-    color: colors.brand,
-    textAlign: 'center',
-    paddingVertical: spacing.lg,
-  },
+  enlace: { textAlign: 'center', paddingVertical: spacing.lg },
 });

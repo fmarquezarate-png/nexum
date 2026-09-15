@@ -1,12 +1,13 @@
 import { StyleSheet, View } from 'react-native';
 
-import { colors } from './tokens';
+import { useTheme } from './ThemeProvider';
 
-/** Línea fina separadora entre filas de una lista. */
+/** Línea fina entre filas de una lista. */
 export function Divider() {
-  return <View style={styles.linea} />;
+  const { colors } = useTheme();
+  return <View style={[styles.linea, { backgroundColor: colors.divider }]} />;
 }
 
 const styles = StyleSheet.create({
-  linea: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
+  linea: { height: StyleSheet.hairlineWidth },
 });

@@ -135,3 +135,20 @@ export async function expulsarMiembro(homeId: string, userId: string): Promise<v
 
   if (error) throw error;
 }
+
+/**
+ * Cuántos dispositivos hay en una casa.
+ *
+ * Se usa para poder decirle al usuario exactamente qué va a perder antes
+ * de borrarla. Un "¿estás seguro?" sin números se contesta que sí por
+ * inercia; "se borrarán 3 habitaciones y 2 aparatos" se lee.
+ */
+export async function contarDispositivos(homeId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('devices')
+    .select('id', { count: 'exact', head: true })
+    .eq('home_id', homeId);
+
+  if (error) throw error;
+  return count ?? 0;
+}

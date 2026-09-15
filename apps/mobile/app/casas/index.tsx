@@ -1,6 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
+import { House, Plus } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { crearCasa, listarCasas, type CasaConRol } from '@/core/homes';
 import { t } from '@/lib/i18n';
@@ -10,27 +11,35 @@ import {
   Card,
   Divider,
   EmptyState,
+  ErrorState,
+  IconTile,
   ListRow,
+  Loading,
   Screen,
   TextField,
-  colors,
   spacing,
+  useAviso,
+  useTheme,
 } from '@/ui';
 
+type Estado = { tipo: 'cargando' } | { tipo: 'listo'; casas: CasaConRol[] } | { tipo: 'error' };
+
 export default function CasasScreen() {
-  const [casas, setCasas] = useState<CasaConRol[] | null>(null);
+  const { colors } = useTheme();
+  const { avisarExito, avisarAviso } = useAviso();
+  const [estado, setEstado] = useState<Estado>({ tipo: 'cargando' });
   const [creando, setCreando] = useState(false);
   const [nombre, setNombre] = useState('');
   const [guardando, setGuardando] = useState(false);
 
   const cargar = useCallback(() => {
     listarCasas()
-      .then(setCasas)
-      .catch(() => setCasas([]));
+      .then((casas) => setEstado({ tipo: 'listo', casas }))
+      .catch(() => setEstado({ tipo: 'error' }));
   }, []);
 
-  // Recarga cada vez que se vuelve a esta pantalla: si acabas de salirte
-  // de una casa, la lista tiene que reflejarlo.
+  // Recarga al volver: si acabas de salirte de una casa o de borrarla,
+  // la lista tiene que reflejarlo.
   useFocusEffect(cargar);
 
   async function guardar() {
@@ -40,43 +49,62 @@ export default function CasasScreen() {
       await crearCasa(nombre);
       setNombre('');
       setCreando(false);
+      avisarExito(t('casas.creada'));
       cargar();
+    } catch {
+      avisarAviso(t('errores.generico'));
     } finally {
       setGuardando(false);
     }
   }
 
-  if (casas === null) {
+  if (estado.tipo === 'cargando') return <Screen><Loading /></Screen>;
+
+  if (estado.tipo === 'error') {
     return (
       <Screen>
-        <ActivityIndicator color={colors.brand} />
+        <ErrorState
+          titulo={t('errores.cargar')}
+          detalle={t('errores.cargarDetalle')}
+          onReintentar={cargar}
+        />
       </Screen>
     );
   }
 
+  const vacia = estado.casas.length === 0;
+
   return (
     <Screen title={t('casas.titulo')}>
-      {casas.length === 0 && !creando ? (
+      {vacia && !creando ? (
         <EmptyState
+          quien="nexi"
           titulo={t('casas.vaciaTitulo')}
           descripcion={t('casas.vaciaTexto')}
           accion={{ label: t('casas.crear'), onPress: () => setCreando(true) }}
         />
-      ) : (
+      ) : null}
+
+      {!vacia ? (
         <Card>
-          {casas.map((casa, i) => (
+          {estado.casas.map((casa, i) => (
             <View key={casa.id}>
               {i > 0 && <Divider />}
               <ListRow
                 titulo={casa.name}
                 subtitulo={casa.timezone}
+                izquierda={
+                  <IconTile>
+                    <House size={20} strokeWidth={1.75} color={colors.brand} />
+                  </IconTile>
+                }
+                derecha={<Badge texto={t(`roles.${casa.mi_rol}`)} />}
                 onPress={() => router.push(`/casas/${casa.id}`)}
-                derecha={<Badge texto={t(`roles.${casa.mi_rol}`)} tono="neutro" />}
               />
             </View>
           ))}
         </Card>
-      )}
+      ) : null}
 
       {creando ? (
         <Card>
@@ -87,19 +115,32 @@ export default function CasasScreen() {
             onChangeText={setNombre}
             onSubmitEditing={guardar}
             returnKeyType="done"
+            autoFocus
           />
-          <View style={{ gap: spacing.sm, paddingTop: spacing.sm }}>
+          <View style={styles.acciones}>
             <Button label={t('acciones.guardar')} onPress={guardar} cargando={guardando} />
             <Button
               label={t('acciones.cancelar')}
               variante="texto"
-              onPress={() => setCreando(false)}
+              onPress={() => {
+                setCreando(false);
+                setNombre('');
+              }}
             />
           </View>
         </Card>
-      ) : casas.length > 0 ? (
-        <Button label={t('casas.nueva')} variante="secundario" onPress={() => setCreando(true)} />
+      ) : !vacia ? (
+        <Button
+          label={t('casas.nueva')}
+          variante="secundario"
+          onPress={() => setCreando(true)}
+          icono={<Plus size={18} strokeWidth={2} color={colors.text} />}
+        />
       ) : null}
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  acciones: { gap: spacing.xs, paddingTop: spacing.sm },
+});

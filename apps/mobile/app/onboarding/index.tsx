@@ -1,52 +1,70 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { ArrowLeft, Plus, X } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { crearCasa, crearHabitaciones } from '@/core/homes';
 import { t } from '@/lib/i18n';
 import {
   Button,
-  HIT_TARGET,
+  ConfirmSheet,
+  PressableAnimado,
   Saludo,
   Screen,
   TextField,
-  colors,
+  layout,
   radius,
   spacing,
   typography,
+  useAviso,
+  usePressScale,
+  useTheme,
 } from '@/ui';
 
-/** Habitaciones que se ofrecen de entrada. Se puede añadir cualquier otra. */
 const SUGERENCIAS = ['salon', 'dormitorio', 'cocina', 'despacho', 'bano', 'terraza'] as const;
+const TOTAL = 3;
 
-const TOTAL_PASOS = 3;
+/** Recuerda que el usuario prefirió no crear casa ahora. Lo lee app/index.tsx. */
+export const CLAVE_OMITIDO = 'nexum.onboarding.omitido';
 
 /**
  * Asistente de alta.
  *
- * Tres pasos: nombre de la casa, habitaciones y primer dispositivo.
- * La casa se crea al final del paso 1, así que si alguien se sale a
- * mitad no se queda sin nada: su casa ya existe.
+ * La casa se crea AL FINAL, no en el primer paso. Antes se creaba nada
+ * más escribir el nombre, así que un nombre mal escrito quedaba grabado
+ * y no había forma de volver atrás. Ahora los dos primeros pasos solo
+ * recogen datos y se puede retroceder y corregir.
  */
 export default function OnboardingScreen() {
-  const [paso, setPaso] = useState(1);
+  const { colors } = useTheme();
+  const { avisarExito } = useAviso();
+
+  const [paso, setPaso] = useState<1 | 2 | 3>(1);
   const [nombreCasa, setNombreCasa] = useState('');
-  const [homeId, setHomeId] = useState<string | null>(null);
   const [elegidas, setElegidas] = useState<string[]>([]);
   const [otra, setOtra] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+  const [saliendo, setSaliendo] = useState(false);
+  const [casaCreada, setCasaCreada] = useState<string | null>(null);
 
-  async function crearYSeguir() {
+  const nombreFinal = nombreCasa.trim() || t('onboarding.casaPlaceholder');
+
+  async function crearTodo() {
     setError(null);
     setCargando(true);
     try {
-      const casa = await crearCasa(nombreCasa.trim() || t('onboarding.casaPlaceholder'));
-      setHomeId(casa.id);
-      setPaso(2);
+      const casa = await crearCasa(nombreFinal);
+      if (elegidas.length) {
+        // Si fallan las habitaciones NO se avanza en silencio: la casa
+        // ya existe, así que se avisa y se sigue; se pueden añadir luego.
+        await crearHabitaciones(casa.id, elegidas).catch(() => {});
+      }
+      setCasaCreada(casa.name);
+      avisarExito(t('casas.creada'));
+      setPaso(3);
     } catch (fallo) {
-      // Enseñar SIEMPRE el motivo real. Un "no se ha podido" a secas
-      // obliga a adivinar, y adivinar cuesta horas.
       const bruto = fallo instanceof Error ? fallo.message : String(fallo);
       const traducido = t(`errores.${bruto}`);
       setError(
@@ -54,22 +72,15 @@ export default function OnboardingScreen() {
           ? t('onboarding.errorCrearDetalle', { detalle: bruto })
           : traducido,
       );
+      setPaso(2);
     } finally {
       setCargando(false);
     }
   }
 
-  async function guardarHabitaciones() {
-    setCargando(true);
-    try {
-      if (homeId && elegidas.length > 0) await crearHabitaciones(homeId, elegidas);
-      setPaso(3);
-    } catch {
-      // Las habitaciones no son imprescindibles: si fallan, se sigue.
-      setPaso(3);
-    } finally {
-      setCargando(false);
-    }
+  async function salir() {
+    await AsyncStorage.setItem(CLAVE_OMITIDO, '1').catch(() => {});
+    router.replace('/(tabs)');
   }
 
   function alternar(nombre: string) {
@@ -87,34 +98,65 @@ export default function OnboardingScreen() {
 
   return (
     <Screen>
-      <Progreso paso={paso} />
+      <View style={styles.barra}>
+        {paso > 1 && paso < 3 ? (
+          <BotonBarra etiqueta={t('acciones.atras')} onPress={() => setPaso(1)}>
+            <ArrowLeft size={20} strokeWidth={1.75} color={colors.textSecondary} />
+          </BotonBarra>
+        ) : (
+          <View style={styles.hueco} />
+        )}
+
+        <Text style={[typography.label, { color: colors.textMuted }]}>
+          {t('onboarding.paso', { n: paso, total: TOTAL }).toUpperCase()}
+        </Text>
+
+        {paso < 3 ? (
+          <BotonBarra etiqueta={t('onboarding.salir')} onPress={() => setSaliendo(true)}>
+            <X size={20} strokeWidth={1.75} color={colors.textSecondary} />
+          </BotonBarra>
+        ) : (
+          <View style={styles.hueco} />
+        )}
+      </View>
+
+      <View style={styles.progreso}>
+        {Array.from({ length: TOTAL }, (_, i) => (
+          <View
+            key={i}
+            style={[
+              styles.tramo,
+              { backgroundColor: i < paso ? colors.brand : colors.surfaceSunken },
+            ]}
+          />
+        ))}
+      </View>
 
       {paso === 1 && (
         <>
-          <Saludo mensaje={t('onboarding.casaNexi')} />
-          <Text style={styles.pregunta}>{t('onboarding.casaTitulo')}</Text>
+          <Saludo mensaje={t('onboarding.casaNexi')} tamano={132} />
+          <Text style={[typography.title, { color: colors.text }]}>
+            {t('onboarding.casaTitulo')}
+          </Text>
           <TextField
             label={t('onboarding.casaLabel')}
             placeholder={t('onboarding.casaPlaceholder')}
             ayuda={t('onboarding.casaAyuda')}
             value={nombreCasa}
             onChangeText={setNombreCasa}
-            error={error}
-            onSubmitEditing={crearYSeguir}
+            onSubmitEditing={() => setPaso(2)}
             returnKeyType="next"
           />
-          <Button
-            label={cargando ? t('onboarding.creando') : t('acciones.continuar')}
-            onPress={crearYSeguir}
-            cargando={cargando}
-          />
+          <Button label={t('acciones.continuar')} onPress={() => setPaso(2)} />
         </>
       )}
 
       {paso === 2 && (
         <>
           <Saludo mensaje={t('onboarding.habitacionesNexi')} tamano={110} />
-          <Text style={styles.pregunta}>{t('onboarding.habitacionesTitulo')}</Text>
+          <Text style={[typography.title, { color: colors.text }]}>
+            {t('onboarding.habitacionesTitulo')}
+          </Text>
 
           <View style={styles.fichas}>
             {SUGERENCIAS.map((clave) => {
@@ -142,27 +184,31 @@ export default function OnboardingScreen() {
             onChangeText={setOtra}
             onSubmitEditing={anadirOtra}
             returnKeyType="done"
+            error={error}
           />
 
           <Button
-            label={t('acciones.continuar')}
-            onPress={guardarHabitaciones}
+            label={cargando ? t('onboarding.creando') : t('acciones.continuar')}
+            onPress={crearTodo}
             cargando={cargando}
+            vibra
           />
-          <Button
-            label={t('acciones.saltar')}
-            onPress={() => setPaso(3)}
-            variante="texto"
-          />
+          <Button label={t('acciones.saltar')} variante="texto" onPress={crearTodo} />
         </>
       )}
 
       {paso === 3 && (
         <>
-          <Saludo mensaje={t('onboarding.dispositivoNexi')} />
-          <Text style={styles.pregunta}>{t('onboarding.dispositivoTitulo')}</Text>
+          <Saludo
+            mensaje={t('onboarding.resumenNexi', { casa: casaCreada ?? nombreFinal })}
+            tamano={140}
+          />
+          <Text style={[typography.title, { color: colors.text }, styles.centro]}>
+            {t('onboarding.resumenTitulo')}
+          </Text>
           <Button
             label={t('onboarding.dispositivoAhora')}
+            icono={<Plus size={18} strokeWidth={2} color={colors.textOnFill} />}
             onPress={() => router.replace('/(tabs)/devices')}
           />
           <Button
@@ -172,65 +218,90 @@ export default function OnboardingScreen() {
           />
         </>
       )}
+
+      <ConfirmSheet
+        visible={saliendo}
+        titulo={t('onboarding.salirTitulo')}
+        descripcion={t('onboarding.salirTexto')}
+        confirmar={t('onboarding.salirConfirmar')}
+        onConfirmar={salir}
+        onCancelar={() => setSaliendo(false)}
+      />
     </Screen>
   );
 }
 
-function Progreso({ paso }: { paso: number }) {
+function BotonBarra({
+  children,
+  onPress,
+  etiqueta,
+}: {
+  children: React.ReactNode;
+  onPress: () => void;
+  etiqueta: string;
+}) {
+  const { animatedStyle, onPressIn, onPressOut } = usePressScale(0.9);
   return (
-    <View style={styles.progreso}>
-      <Text style={styles.progresoTexto}>
-        {t('onboarding.paso', { n: paso, total: TOTAL_PASOS })}
-      </Text>
-      <View style={styles.barra}>
-        {Array.from({ length: TOTAL_PASOS }, (_, i) => (
-          <View key={i} style={[styles.tramo, i < paso && styles.tramoHecho]} />
-        ))}
-      </View>
-    </View>
+    <PressableAnimado
+      onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      accessibilityRole="button"
+      accessibilityLabel={etiqueta}
+      hitSlop={10}
+      style={[styles.botonBarra, animatedStyle]}
+    >
+      {children}
+    </PressableAnimado>
   );
 }
 
-function Ficha({
-  texto,
-  activa,
-  onPress,
-}: {
-  texto: string;
-  activa: boolean;
-  onPress: () => void;
-}) {
+function Ficha({ texto, activa, onPress }: { texto: string; activa: boolean; onPress: () => void }) {
+  const { colors, shadow } = useTheme();
+  const { animatedStyle, onPressIn, onPressOut } = usePressScale();
+
   return (
-    <Pressable
+    <PressableAnimado
       onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: activa }}
-      style={({ pressed }) => [styles.ficha, activa && styles.fichaActiva, pressed && styles.pulsada]}
+      style={[
+        styles.ficha,
+        {
+          backgroundColor: activa ? colors.brandFill : colors.surface,
+          borderColor: activa ? colors.brandFill : colors.borderStrong,
+        },
+        !activa && shadow.subtle,
+        animatedStyle,
+      ]}
     >
-      <Text style={[styles.fichaTexto, activa && styles.fichaTextoActiva]}>{texto}</Text>
-    </Pressable>
+      <Text
+        style={[
+          typography.bodyStrong,
+          { color: activa ? colors.textOnFill : colors.textSecondary },
+        ]}
+      >
+        {texto}
+      </Text>
+    </PressableAnimado>
   );
 }
 
 const styles = StyleSheet.create({
-  progreso: { gap: spacing.sm, paddingTop: spacing.sm },
-  progresoTexto: { ...typography.label, color: colors.textMuted },
-  barra: { flexDirection: 'row', gap: spacing.xs },
-  tramo: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border },
-  tramoHecho: { backgroundColor: colors.brand },
-  pregunta: { ...typography.title, color: colors.text },
+  barra: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  hueco: { width: 36 },
+  botonBarra: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  progreso: { flexDirection: 'row', gap: spacing.xs, paddingBottom: spacing.sm },
+  tramo: { flex: 1, height: 4, borderRadius: 2 },
+  centro: { textAlign: 'center' },
   fichas: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   ficha: {
-    minHeight: HIT_TARGET,
+    minHeight: layout.hitTarget,
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  fichaActiva: { backgroundColor: colors.brand, borderColor: colors.brand },
-  pulsada: { opacity: 0.7 },
-  fichaTexto: { ...typography.body, color: colors.text },
-  fichaTextoActiva: { color: colors.textOnBrand, fontWeight: '600' },
 });

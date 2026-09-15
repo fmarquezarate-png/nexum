@@ -1,11 +1,21 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { canjearCodigo } from '@/core/access';
 import { fechaLarga } from '@/lib/format';
 import { t } from '@/lib/i18n';
-import { Button, Card, Mascota, Screen, TextField, colors, spacing, typography } from '@/ui';
+import {
+  Button,
+  Card,
+  Saludo,
+  Screen,
+  TextField,
+  spacing,
+  typography,
+  useAviso,
+  useTheme,
+} from '@/ui';
 
 /**
  * Canje de un código de invitado.
@@ -15,6 +25,8 @@ import { Button, Card, Mascota, Screen, TextField, colors, spacing, typography }
  * criterio de aceptación de esta fase.
  */
 export default function CanjearScreen() {
+  const { colors } = useTheme();
+  const { avisarExito } = useAviso();
   const [codigo, setCodigo] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [exito, setExito] = useState<string | null>(null);
@@ -22,8 +34,6 @@ export default function CanjearScreen() {
 
   async function canjear() {
     setError(null);
-    setExito(null);
-
     const limpio = codigo.trim();
     if (!limpio) return setError(t('errores.not_found'));
 
@@ -32,6 +42,7 @@ export default function CanjearScreen() {
       const r = await canjearCodigo(limpio);
       if (r.ok) {
         setExito(t('codigos.canjeOkCaduca', { fecha: fechaLarga(r.datos.expires_at) }));
+        avisarExito(t('codigos.canjeOk'));
       } else {
         setError(t(`errores.${r.motivo}`));
       }
@@ -45,7 +56,7 @@ export default function CanjearScreen() {
   if (exito) {
     return (
       <Screen title={t('codigos.canjeOk')}>
-        <Mascota quien="nexi" mensaje={exito} />
+        <Saludo mensaje={exito} quien="nexi" />
         <Button label={t('acciones.continuar')} onPress={() => router.replace('/')} />
       </Screen>
     );
@@ -53,7 +64,7 @@ export default function CanjearScreen() {
 
   return (
     <Screen title={t('codigos.canjearTitulo')} subtitle={t('codigos.canjearExplicacion')}>
-      <View style={{ gap: spacing.lg }}>
+      <View style={styles.formulario}>
         <TextField
           label={t('codigos.canjearLabel')}
           placeholder={t('codigos.canjearPlaceholder')}
@@ -64,15 +75,20 @@ export default function CanjearScreen() {
           error={error}
           onSubmitEditing={canjear}
           returnKeyType="go"
+          autoFocus
         />
-        <Button label={t('codigos.canjearBoton')} onPress={canjear} cargando={cargando} />
+        <Button label={t('codigos.canjearBoton')} onPress={canjear} cargando={cargando} vibra />
       </View>
 
       <Card>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>
+        <Text style={[typography.caption, { color: colors.textSecondary }]}>
           {t('codigos.explicacion')}
         </Text>
       </Card>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  formulario: { gap: spacing.lg },
+});

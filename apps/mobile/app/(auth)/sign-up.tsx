@@ -4,10 +4,11 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '@/core/auth';
 import { t } from '@/lib/i18n';
-import { Button, Saludo, Screen, TextField, colors, spacing, typography } from '@/ui';
+import { Button, Saludo, Screen, TextField, spacing, typography, useTheme } from '@/ui';
 
 export default function SignUpScreen() {
   const { registrarse } = useAuth();
+  const { colors } = useTheme();
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +33,7 @@ export default function SignUpScreen() {
 
   return (
     <Screen title={t('auth.signUp')}>
-      <Saludo mensaje={t('auth.nexiRegistro')} tamano={120} />
+      <Saludo mensaje={t('auth.nexiRegistro')} tamano={118} />
 
       <View style={styles.formulario}>
         <TextField
@@ -66,8 +67,8 @@ export default function SignUpScreen() {
       </View>
 
       <View style={styles.pie}>
-        <Text style={styles.pieTexto}>{t('auth.hasAccount')}</Text>
-        <Link href="/(auth)/sign-in" style={styles.enlaceFuerte}>
+        <Text style={[typography.body, { color: colors.textSecondary }]}>{t('auth.hasAccount')}</Text>
+        <Link href="/(auth)/sign-in" style={[typography.bodyStrong, { color: colors.brand }]}>
           {t('auth.signIn')}
         </Link>
       </View>
@@ -77,7 +78,5 @@ export default function SignUpScreen() {
 
 const styles = StyleSheet.create({
   formulario: { gap: spacing.lg },
-  pie: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xs, paddingTop: spacing.xl },
-  pieTexto: { ...typography.body, color: colors.textMuted },
-  enlaceFuerte: { ...typography.bodyStrong, color: colors.brand },
+  pie: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xs, paddingTop: spacing.xxl },
 });

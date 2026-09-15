@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { useAuth } from '@/core/auth';
-import { supabase } from '@/lib/supabase';
 import { t } from '@/lib/i18n';
-import { Button, Screen, TextField, spacing } from '@/ui';
+import { supabase } from '@/lib/supabase';
+import { Button, Screen, TextField, spacing, useAviso } from '@/ui';
 
 export default function PerfilScreen() {
   const { perfil, session, refrescarPerfil } = useAuth();
+  const { avisarExito, avisarAviso } = useAviso();
   const [nombre, setNombre] = useState(perfil?.display_name ?? '');
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,8 +24,13 @@ export default function PerfilScreen() {
       .eq('id', session!.user.id);
     setGuardando(false);
 
-    if (fallo) setError(t('errores.generico'));
-    else await refrescarPerfil();
+    if (fallo) {
+      setError(t('errores.generico'));
+      avisarAviso(t('errores.generico'));
+    } else {
+      await refrescarPerfil();
+      avisarExito(t('acciones.guardado'));
+    }
   }
 
   return (
@@ -40,7 +46,7 @@ export default function PerfilScreen() {
           label={t('ajustes.correo')}
           value={session?.user.email ?? ''}
           editable={false}
-          ayuda="El correo no se puede cambiar desde aquí."
+          ayuda={t('ajustes.correoFijo')}
         />
         <Button label={t('acciones.guardar')} onPress={guardar} cargando={guardando} />
       </View>

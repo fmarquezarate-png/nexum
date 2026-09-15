@@ -1,11 +1,15 @@
-import { Screen, Placeholder } from '@/ui';
-import { t } from '@/lib/i18n';
+import { t, tList } from '@/lib/i18n';
+import { Proximamente, Screen } from '@/ui';
 
 export default function StatsScreen() {
   return (
     <Screen title={t('tabs.stats')}>
-      <Placeholder phase="Fase 3" what="Series de temperatura y humedad (datos reales del SHT31)" />
-      <Placeholder phase="Fase 3" what="Horas de uso por dispositivo" />
+      <Proximamente
+        quien="airi"
+        titulo={t('proximamente.estadisticas.titulo')}
+        mensaje={t('proximamente.estadisticas.mensaje')}
+        incluye={tList('proximamente.estadisticas.incluye')}
+      />
     </Screen>
   );
 }

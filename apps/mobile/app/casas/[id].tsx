@@ -1,10 +1,10 @@
 import * as Clipboard from 'expo-clipboard';
 import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
+import { Copy, DoorOpen, KeyRound, Pencil, Plus, Trash2, UserRound, X } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
-import { useAuth } from '@/core/auth';
 import {
   DURACIONES,
   crearCodigoDeCasa,
@@ -12,13 +12,17 @@ import {
   listarCodigos,
   revocarCodigo,
 } from '@/core/access';
+import { useAuth } from '@/core/auth';
 import {
+  borrarCasa,
   borrarHabitacion,
+  contarDispositivos,
   crearHabitaciones,
   expulsarMiembro,
   listarCasas,
   listarHabitaciones,
   listarMiembros,
+  renombrarCasa,
   type CasaConRol,
   type MiembroConPerfil,
 } from '@/core/homes';
@@ -29,164 +33,268 @@ import {
   Badge,
   Button,
   Card,
+  ConfirmSheet,
   Divider,
+  ErrorState,
+  IconTile,
   ListRow,
+  Loading,
+  PressableAnimado,
   Screen,
+  SegmentedControl,
   TextField,
-  colors,
+  layout,
   radius,
   spacing,
   typography,
+  useAviso,
+  usePressScale,
+  useTheme,
 } from '@/ui';
 
-type Duracion = (typeof DURACIONES)[number];
+/** Lo que hay que confirmar en cada momento. null = nada abierto. */
+type Confirmacion =
+  | { que: 'borrarCasa' }
+  | { que: 'salirCasa' }
+  | { que: 'borrarHabitacion'; habitacion: Room }
+  | { que: 'expulsar'; miembro: MiembroConPerfil }
+  | { que: 'revocar'; codigo: AccessCode }
+  | null;
+
+interface Datos {
+  casa: CasaConRol;
+  habitaciones: Room[];
+  miembros: MiembroConPerfil[];
+  codigos: AccessCode[];
+  dispositivos: number;
+}
+
+type Estado = { tipo: 'cargando' } | { tipo: 'listo'; datos: Datos } | { tipo: 'error' };
 
 export default function DetalleCasaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const { session } = useAuth();
+  const { colors } = useTheme();
+  const { avisarExito, avisarAviso } = useAviso();
 
-  const [casa, setCasa] = useState<CasaConRol | null>(null);
-  const [habitaciones, setHabitaciones] = useState<Room[]>([]);
-  const [miembros, setMiembros] = useState<MiembroConPerfil[]>([]);
-  const [codigos, setCodigos] = useState<AccessCode[]>([]);
-  const [cargando, setCargando] = useState(true);
-
+  const [estado, setEstado] = useState<Estado>({ tipo: 'cargando' });
+  const [confirmando, setConfirmando] = useState<Confirmacion>(null);
   const [nuevaHabitacion, setNuevaHabitacion] = useState('');
+  const [renombrando, setRenombrando] = useState(false);
+  const [nombreNuevo, setNombreNuevo] = useState('');
   const [creandoCodigo, setCreandoCodigo] = useState(false);
-  const [duracion, setDuracion] = useState<Duracion>(DURACIONES[1]);
+  const [horas, setHoras] = useState<number>(DURACIONES[1].horas);
   const [rolCodigo, setRolCodigo] = useState<'member' | 'guest'>('guest');
   const [codigoNuevo, setCodigoNuevo] = useState<{ code: string; expires_at: string } | null>(null);
   const [copiado, setCopiado] = useState(false);
 
-  const esAdmin = casa?.mi_rol === 'owner' || casa?.mi_rol === 'admin';
-
   const cargar = useCallback(() => {
     if (!id) return;
-    setCargando(true);
     Promise.all([listarCasas(), listarHabitaciones(id), listarMiembros(id)])
-      .then(async ([casas, habs, miem]) => {
-        const actual = casas.find((c) => c.id === id) ?? null;
-        setCasa(actual);
-        setHabitaciones(habs);
-        setMiembros(miem);
-        navigation.setOptions({ title: actual?.name ?? '' });
-
-        // Los códigos solo los puede leer un admin: si no lo es, ni se piden.
-        if (actual?.mi_rol === 'owner' || actual?.mi_rol === 'admin') {
-          setCodigos(await listarCodigos(id).catch(() => []));
-        } else {
-          setCodigos([]);
+      .then(async ([casas, habitaciones, miembros]) => {
+        const casa = casas.find((c) => c.id === id);
+        if (!casa) {
+          // Te han quitado el acceso, o acabas de salirte.
+          router.replace('/casas');
+          return;
         }
+        navigation.setOptions({ title: casa.name });
+
+        const esAdmin = casa.mi_rol === 'owner' || casa.mi_rol === 'admin';
+        const [codigos, dispositivos] = await Promise.all([
+          esAdmin ? listarCodigos(id).catch(() => []) : Promise.resolve([]),
+          contarDispositivos(id).catch(() => 0),
+        ]);
+
+        setEstado({ tipo: 'listo', datos: { casa, habitaciones, miembros, codigos, dispositivos } });
       })
-      .finally(() => setCargando(false));
+      .catch(() => setEstado({ tipo: 'error' }));
   }, [id, navigation]);
 
   useFocusEffect(cargar);
+
+  if (estado.tipo === 'cargando') return <Screen><Loading /></Screen>;
+  if (estado.tipo === 'error') {
+    return (
+      <Screen>
+        <ErrorState
+          titulo={t('errores.cargar')}
+          detalle={t('errores.cargarDetalle')}
+          onReintentar={cargar}
+        />
+      </Screen>
+    );
+  }
+
+  const { casa, habitaciones, miembros, codigos, dispositivos } = estado.datos;
+  const esAdmin = casa.mi_rol === 'owner' || casa.mi_rol === 'admin';
+  const esOwner = casa.mi_rol === 'owner';
+
+  // ─── Acciones ──────────────────────────────────────────────────────
 
   async function anadirHabitacion() {
     const n = nuevaHabitacion.trim();
     if (!n || !id) return;
     setNuevaHabitacion('');
-    await crearHabitaciones(id, [n]);
-    cargar();
+    try {
+      await crearHabitaciones(id, [n]);
+      avisarExito(t('casas.habitacionAnadida'));
+      cargar();
+    } catch {
+      avisarAviso(t('errores.generico'));
+    }
   }
 
-  function confirmarBorrarHabitacion(h: Room) {
-    Alert.alert(h.name, '¿Quieres borrar esta habitación?', [
-      { text: t('acciones.cancelar'), style: 'cancel' },
-      {
-        text: t('acciones.borrar'),
-        style: 'destructive',
-        onPress: async () => {
-          await borrarHabitacion(h.id);
-          cargar();
-        },
-      },
-    ]);
+  async function guardarNombre() {
+    const n = nombreNuevo.trim();
+    if (!n || !id) return;
+    try {
+      await renombrarCasa(id, n);
+      setRenombrando(false);
+      avisarExito(t('casas.renombrada'));
+      cargar();
+    } catch {
+      avisarAviso(t('errores.generico'));
+    }
   }
 
   async function generarCodigo() {
     if (!id) return;
-    const r = await crearCodigoDeCasa(id, rolCodigo, duracion.horas);
+    const r = await crearCodigoDeCasa(id, rolCodigo, horas);
     if (r.ok) {
       setCodigoNuevo({ code: r.datos.code, expires_at: r.datos.expires_at });
       setCreandoCodigo(false);
       setCopiado(false);
       cargar();
     } else {
-      Alert.alert(t('errores.generico'), t(`errores.${r.motivo}`));
+      avisarAviso(t(`errores.${r.motivo}`));
     }
   }
 
-  async function copiar(texto: string) {
-    await Clipboard.setStringAsync(texto);
-    setCopiado(true);
+  async function ejecutarConfirmacion() {
+    const c = confirmando;
+    setConfirmando(null);
+    if (!c || !id) return;
+
+    try {
+      if (c.que === 'borrarCasa') {
+        await borrarCasa(id);
+        avisarExito(t('casas.borrada'));
+        router.replace('/casas');
+        return;
+      }
+      if (c.que === 'salirCasa') {
+        await expulsarMiembro(id, session!.user.id);
+        avisarExito(t('casas.salida'));
+        router.replace('/casas');
+        return;
+      }
+      if (c.que === 'borrarHabitacion') {
+        await borrarHabitacion(c.habitacion.id);
+        avisarExito(t('casas.habitacionBorrada'));
+      }
+      if (c.que === 'expulsar') {
+        await expulsarMiembro(id, c.miembro.user_id);
+        avisarExito(
+          t('miembros.expulsado', { nombre: c.miembro.profiles?.display_name ?? '' }),
+        );
+      }
+      if (c.que === 'revocar') {
+        await revocarCodigo(c.codigo.id);
+        avisarExito(t('codigos.revocado'));
+      }
+      cargar();
+    } catch {
+      avisarAviso(t('errores.generico'));
+    }
   }
 
-  function confirmarRevocar(c: AccessCode) {
-    Alert.alert(c.code, t('codigos.revocarAviso'), [
-      { text: t('acciones.cancelar'), style: 'cancel' },
-      {
-        text: t('codigos.revocar'),
-        style: 'destructive',
-        onPress: async () => {
-          await revocarCodigo(c.id);
-          cargar();
-        },
-      },
-    ]);
-  }
+  // ─── Textos de la confirmación abierta ─────────────────────────────
 
-  function confirmarExpulsar(m: MiembroConPerfil) {
-    const esYo = m.user_id === session?.user.id;
-    Alert.alert(
-      m.profiles?.display_name ?? t('miembros.tu'),
-      esYo ? t('casas.salirDeCasa') : t('miembros.expulsar'),
-      [
-        { text: t('acciones.cancelar'), style: 'cancel' },
-        {
-          text: esYo ? t('casas.salirDeCasa') : t('miembros.expulsar'),
-          style: 'destructive',
-          onPress: async () => {
-            await expulsarMiembro(m.home_id, m.user_id);
-            if (esYo) router.replace('/casas');
-            else cargar();
-          },
-        },
-      ],
-    );
-  }
+  const dialogo = (() => {
+    const c = confirmando;
+    if (!c) return null;
 
-  if (cargando && !casa) {
-    return (
-      <Screen>
-        <ActivityIndicator color={colors.brand} />
-      </Screen>
-    );
-  }
+    if (c.que === 'borrarCasa') {
+      const consecuencias = [
+        `${habitaciones.length} ${habitaciones.length === 1 ? 'habitación' : 'habitaciones'}`,
+        `${dispositivos} ${dispositivos === 1 ? 'dispositivo' : 'dispositivos'} y todo su historial`,
+      ];
+      const otros = miembros.filter((m) => m.user_id !== session?.user.id);
+      if (otros.length) {
+        const nombres = otros.map((m) => m.profiles?.display_name ?? '—').join(', ');
+        consecuencias.push(`${nombres} ${otros.length === 1 ? 'perderá' : 'perderán'} el acceso`);
+      }
+      return {
+        titulo: t('casas.borrarTitulo', { casa: casa.name }),
+        descripcion: t('casas.borrarTexto'),
+        consecuencias,
+        confirmar: t('casas.borrarConfirmar'),
+        segundaPregunta: t('casas.borrarSegunda'),
+      };
+    }
+    if (c.que === 'salirCasa') {
+      return {
+        titulo: t('casas.salirTitulo', { casa: casa.name }),
+        descripcion: t('casas.salirTexto'),
+        confirmar: t('casas.salirConfirmar'),
+      };
+    }
+    if (c.que === 'borrarHabitacion') {
+      return {
+        titulo: t('habitaciones.borrarTitulo', { nombre: c.habitacion.name }),
+        descripcion: t('habitaciones.borrarTexto'),
+        confirmar: t('habitaciones.borrarConfirmar'),
+      };
+    }
+    if (c.que === 'expulsar') {
+      const nombre = c.miembro.profiles?.display_name ?? '';
+      return {
+        titulo: t('miembros.expulsarTitulo', { nombre }),
+        descripcion: t('miembros.expulsarTexto'),
+        confirmar: t('miembros.expulsarConfirmar'),
+      };
+    }
+    return {
+      titulo: c.codigo.code,
+      descripcion: t('codigos.revocarAviso'),
+      confirmar: t('codigos.revocar'),
+    };
+  })();
 
   return (
-    <Screen title={casa?.name}>
+    <Screen title={casa.name} subtitle={t(`roles.${casa.mi_rol}`)}>
       {/* ─── Habitaciones ─────────────────────────────────────────── */}
-      <Text style={styles.seccion}>{t('casas.habitaciones')}</Text>
+      <Seccion titulo={t('casas.habitaciones')} />
       <Card>
         {habitaciones.length === 0 ? (
-          <Text style={styles.vacio}>{t('casas.habitacionesVacias')}</Text>
+          <Text style={[typography.caption, { color: colors.textFaint }]}>
+            {t('casas.habitacionesVacias')}
+          </Text>
         ) : (
           habitaciones.map((h, i) => (
             <View key={h.id}>
               {i > 0 && <Divider />}
               <ListRow
                 titulo={h.name}
-                onPress={esAdmin ? () => confirmarBorrarHabitacion(h) : undefined}
-                derecha={esAdmin ? <Text style={styles.quitar}>×</Text> : undefined}
+                flecha={false}
+                derecha={
+                  esAdmin ? (
+                    <BotonIcono
+                      etiqueta={t('habitaciones.borrarConfirmar')}
+                      onPress={() => setConfirmando({ que: 'borrarHabitacion', habitacion: h })}
+                    >
+                      <Trash2 size={17} strokeWidth={1.75} color={colors.textFaint} />
+                    </BotonIcono>
+                  ) : undefined
+                }
               />
             </View>
           ))
         )}
 
-        {esAdmin && (
+        {esAdmin ? (
           <View style={styles.anadir}>
             <TextField
               label={t('acciones.anadir')}
@@ -197,11 +305,11 @@ export default function DetalleCasaScreen() {
               returnKeyType="done"
             />
           </View>
-        )}
+        ) : null}
       </Card>
 
       {/* ─── Miembros ─────────────────────────────────────────────── */}
-      <Text style={styles.seccion}>{t('casas.miembros')}</Text>
+      <Seccion titulo={t('casas.miembros')} />
       <Card>
         {miembros.map((m, i) => {
           const esYo = m.user_id === session?.user.id;
@@ -209,16 +317,31 @@ export default function DetalleCasaScreen() {
             <View key={m.user_id}>
               {i > 0 && <Divider />}
               <ListRow
-                titulo={
-                  (m.profiles?.display_name ?? '—') + (esYo ? ` · ${t('miembros.tu')}` : '')
-                }
+                titulo={(m.profiles?.display_name ?? '—') + (esYo ? ` · ${t('miembros.tu')}` : '')}
                 subtitulo={
                   m.expires_at
                     ? t('miembros.caduca', { fecha: fechaCorta(m.expires_at) })
                     : t('miembros.permanente')
                 }
-                onPress={esAdmin || esYo ? () => confirmarExpulsar(m) : undefined}
-                derecha={<Badge texto={t(`roles.${m.role}`)} />}
+                flecha={false}
+                izquierda={
+                  <IconTile tamano={32}>
+                    <UserRound size={16} strokeWidth={1.75} color={colors.brand} />
+                  </IconTile>
+                }
+                derecha={
+                  <View style={styles.derecha}>
+                    <Badge texto={t(`roles.${m.role}`)} />
+                    {esAdmin && !esYo ? (
+                      <BotonIcono
+                        etiqueta={t('miembros.expulsar')}
+                        onPress={() => setConfirmando({ que: 'expulsar', miembro: m })}
+                      >
+                        <X size={17} strokeWidth={2} color={colors.textFaint} />
+                      </BotonIcono>
+                    ) : null}
+                  </View>
+                }
               />
             </View>
           );
@@ -228,27 +351,34 @@ export default function DetalleCasaScreen() {
       {/* ─── Códigos de invitado ──────────────────────────────────── */}
       {esAdmin ? (
         <>
-          <Text style={styles.seccion}>{t('casas.codigos')}</Text>
+          <Seccion titulo={t('casas.codigos')} />
 
           {codigoNuevo ? (
-            <Card>
-              <Text style={styles.codigoTitulo}>{t('codigos.creado')}</Text>
-              <View style={styles.qrCaja}>
-                <QRCode value={codigoNuevo.code} size={180} backgroundColor="#FFFFFF" />
+            <Card elevada>
+              <Text style={[typography.section, { color: colors.text }, styles.centro]}>
+                {t('codigos.creado')}
+              </Text>
+              <View style={styles.qr}>
+                <QRCode value={codigoNuevo.code} size={172} backgroundColor="#FFFFFF" />
               </View>
-              <Text style={styles.codigoTexto} selectable>
+              <Text style={[typography.dataM, { color: colors.text }, styles.codigo]} selectable>
                 {codigoNuevo.code}
               </Text>
-              <Text style={styles.codigoPie}>
+              <Text style={[typography.caption, { color: colors.textMuted }, styles.centro]}>
                 {t('codigos.caducaEl', { fecha: fechaLarga(codigoNuevo.expires_at) })}
               </Text>
               <Button
                 label={copiado ? t('acciones.copiado') : t('acciones.copiar')}
                 variante="secundario"
-                onPress={() => copiar(codigoNuevo.code)}
+                icono={<Copy size={17} strokeWidth={1.75} color={colors.text} />}
+                onPress={async () => {
+                  await Clipboard.setStringAsync(codigoNuevo.code);
+                  setCopiado(true);
+                  avisarExito(t('acciones.copiado'));
+                }}
               />
               <Button
-                label={t('acciones.cerrar')}
+                label={t('acciones.hecho')}
                 variante="texto"
                 onPress={() => setCodigoNuevo(null)}
               />
@@ -257,56 +387,52 @@ export default function DetalleCasaScreen() {
 
           {creandoCodigo ? (
             <Card>
-              <Text style={styles.etiqueta}>{t('codigos.duracion')}</Text>
-              <View style={styles.opciones}>
-                {DURACIONES.map((d) => (
-                  <Opcion
-                    key={d.etiqueta}
-                    texto={d.etiqueta}
-                    activa={d.horas === duracion.horas}
-                    onPress={() => setDuracion(d)}
-                  />
-                ))}
-              </View>
+              <Text style={[typography.bodyStrong, { color: colors.text }]}>
+                {t('codigos.duracion')}
+              </Text>
+              <SegmentedControl
+                opciones={DURACIONES.map((d) => ({ valor: String(d.horas), label: d.etiqueta }))}
+                valor={String(horas)}
+                onChange={(v) => setHoras(Number(v))}
+              />
 
-              <Text style={styles.etiqueta}>{t('codigos.queRol')}</Text>
-              <View style={styles.opciones}>
-                <Opcion
-                  texto={t('roles.member')}
-                  activa={rolCodigo === 'member'}
-                  onPress={() => setRolCodigo('member')}
-                />
-                <Opcion
-                  texto={t('roles.guest')}
-                  activa={rolCodigo === 'guest'}
-                  onPress={() => setRolCodigo('guest')}
-                />
-              </View>
-              <Text style={styles.ayuda}>
+              <Text style={[typography.bodyStrong, { color: colors.text }, styles.separado]}>
+                {t('codigos.queRol')}
+              </Text>
+              <SegmentedControl
+                opciones={[
+                  { valor: 'guest', label: t('roles.guest') },
+                  { valor: 'member', label: t('roles.member') },
+                ]}
+                valor={rolCodigo}
+                onChange={(v) => setRolCodigo(v as 'member' | 'guest')}
+              />
+              <Text style={[typography.caption, { color: colors.textSecondary }]}>
                 {rolCodigo === 'member' ? t('codigos.rolMember') : t('codigos.rolGuest')}
               </Text>
 
-              <Button label={t('codigos.crear')} onPress={generarCodigo} />
-              <Button
-                label={t('acciones.cancelar')}
-                variante="texto"
-                onPress={() => setCreandoCodigo(false)}
-              />
+              <View style={styles.acciones}>
+                <Button label={t('codigos.crear')} onPress={generarCodigo} vibra />
+                <Button
+                  label={t('acciones.cancelar')}
+                  variante="texto"
+                  onPress={() => setCreandoCodigo(false)}
+                />
+              </View>
             </Card>
           ) : (
             <Button
               label={t('codigos.crear')}
               variante="secundario"
+              icono={<Plus size={18} strokeWidth={2} color={colors.text} />}
               onPress={() => setCreandoCodigo(true)}
             />
           )}
 
-          <Card>
-            {codigos.length === 0 ? (
-              <Text style={styles.vacio}>{t('codigos.vacioTexto')}</Text>
-            ) : (
-              codigos.map((c, i) => {
-                const estado = estadoDeCodigo(c);
+          {codigos.length > 0 ? (
+            <Card>
+              {codigos.map((c, i) => {
+                const est = estadoDeCodigo(c);
                 return (
                   <View key={c.id}>
                     {i > 0 && <Divider />}
@@ -315,86 +441,187 @@ export default function DetalleCasaScreen() {
                       subtitulo={`${t(`roles.${c.role}`)} · ${t('codigos.caducaEl', {
                         fecha: fechaCorta(c.expires_at),
                       })}`}
-                      onPress={estado === 'activo' ? () => confirmarRevocar(c) : undefined}
+                      flecha={false}
+                      izquierda={
+                        <IconTile tamano={32}>
+                          <KeyRound size={16} strokeWidth={1.75} color={colors.brand} />
+                        </IconTile>
+                      }
                       derecha={
-                        <Badge
-                          texto={t(`codigos.estado.${estado}`)}
-                          tono={estado === 'activo' ? 'ok' : estado === 'caducado' ? 'aviso' : 'error'}
-                        />
+                        <View style={styles.derecha}>
+                          <Badge
+                            texto={t(`codigos.estado.${est}`)}
+                            tono={est === 'activo' ? 'ok' : est === 'caducado' ? 'aviso' : 'error'}
+                          />
+                          {est === 'activo' ? (
+                            <BotonIcono
+                              etiqueta={t('codigos.revocar')}
+                              onPress={() => setConfirmando({ que: 'revocar', codigo: c })}
+                            >
+                              <X size={17} strokeWidth={2} color={colors.textFaint} />
+                            </BotonIcono>
+                          ) : null}
+                        </View>
                       }
                     />
                   </View>
                 );
-              })
-            )}
-          </Card>
+              })}
+            </Card>
+          ) : null}
         </>
       ) : (
         <Card>
-          <Text style={styles.vacio}>{t('miembros.soloAdmin')}</Text>
+          <Text style={[typography.caption, { color: colors.textSecondary }]}>
+            {t('miembros.soloAdmin')}
+          </Text>
         </Card>
       )}
+
+      {/* ─── Zona delicada ────────────────────────────────────────── */}
+      <Seccion titulo={t('casas.zonaDelicada')} />
+      <Card>
+        {esAdmin ? (
+          renombrando ? (
+            <>
+              <TextField
+                label={t('casas.nombre')}
+                value={nombreNuevo}
+                onChangeText={setNombreNuevo}
+                onSubmitEditing={guardarNombre}
+                returnKeyType="done"
+                autoFocus
+              />
+              <View style={styles.acciones}>
+                <Button label={t('acciones.guardar')} onPress={guardarNombre} />
+                <Button
+                  label={t('acciones.cancelar')}
+                  variante="texto"
+                  onPress={() => setRenombrando(false)}
+                />
+              </View>
+            </>
+          ) : (
+            <ListRow
+              titulo={t('casas.renombrar')}
+              flecha={false}
+              izquierda={
+                <IconTile tamano={32}>
+                  <Pencil size={16} strokeWidth={1.75} color={colors.brand} />
+                </IconTile>
+              }
+              onPress={() => {
+                setNombreNuevo(casa.name);
+                setRenombrando(true);
+              }}
+            />
+          )
+        ) : null}
+
+        {esAdmin && !renombrando ? <Divider /> : null}
+
+        <ListRow
+          titulo={t('casas.salirDeCasa')}
+          flecha={false}
+          izquierda={
+            <IconTile tamano={32} fondo={colors.warningSoft}>
+              <DoorOpen size={16} strokeWidth={1.75} color={colors.warning} />
+            </IconTile>
+          }
+          onPress={() => setConfirmando({ que: 'salirCasa' })}
+        />
+
+        {esOwner ? (
+          <>
+            <Divider />
+            <ListRow
+              titulo={t('casas.borrarCasa')}
+              subtitulo={t('casas.borrarTexto')}
+              flecha={false}
+              izquierda={
+                <IconTile tamano={32} fondo={colors.dangerSoft}>
+                  <Trash2 size={16} strokeWidth={1.75} color={colors.danger} />
+                </IconTile>
+              }
+              onPress={() => setConfirmando({ que: 'borrarCasa' })}
+            />
+          </>
+        ) : (
+          <>
+            <Divider />
+            <Text style={[typography.caption, { color: colors.textFaint }, styles.nota]}>
+              {t('casas.soloOwnerBorra')}
+            </Text>
+          </>
+        )}
+      </Card>
+
+      {dialogo ? (
+        <ConfirmSheet
+          visible
+          titulo={dialogo.titulo}
+          descripcion={dialogo.descripcion}
+          consecuencias={'consecuencias' in dialogo ? dialogo.consecuencias : undefined}
+          confirmar={dialogo.confirmar}
+          segundaPregunta={'segundaPregunta' in dialogo ? dialogo.segundaPregunta : undefined}
+          onConfirmar={ejecutarConfirmacion}
+          onCancelar={() => setConfirmando(null)}
+        />
+      ) : null}
     </Screen>
   );
 }
 
-function Opcion({
-  texto,
-  activa,
-  onPress,
-}: {
-  texto: string;
-  activa: boolean;
-  onPress: () => void;
-}) {
+function Seccion({ titulo }: { titulo: string }) {
+  const { colors } = useTheme();
   return (
-    <Text
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ selected: activa }}
-      style={[styles.opcion, activa && styles.opcionActiva]}
-    >
-      {texto}
+    <Text style={[typography.label, { color: colors.textMuted }, styles.seccion]}>
+      {titulo.toUpperCase()}
     </Text>
   );
 }
 
+/** Botón pequeño solo con icono. Zona pulsable completa aunque se vea chico. */
+function BotonIcono({
+  children,
+  onPress,
+  etiqueta,
+}: {
+  children: React.ReactNode;
+  onPress: () => void;
+  etiqueta: string;
+}) {
+  const { animatedStyle, onPressIn, onPressOut } = usePressScale(0.9);
+  return (
+    <PressableAnimado
+      onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      accessibilityRole="button"
+      accessibilityLabel={etiqueta}
+      hitSlop={10}
+      style={[styles.botonIcono, animatedStyle]}
+    >
+      {children}
+    </PressableAnimado>
+  );
+}
+
 const styles = StyleSheet.create({
-  seccion: { ...typography.label, color: colors.textMuted, textTransform: 'uppercase', paddingTop: spacing.md },
-  vacio: { ...typography.caption, color: colors.textFaint },
-  quitar: { ...typography.title, color: colors.textFaint },
+  seccion: { paddingTop: layout.sectionGap - layout.cardGap, paddingLeft: spacing.xs },
   anadir: { paddingTop: spacing.sm },
-  etiqueta: { ...typography.bodyStrong, color: colors.text, paddingTop: spacing.sm },
-  ayuda: { ...typography.caption, color: colors.textMuted },
-  opciones: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  opcion: {
-    ...typography.body,
-    color: colors.text,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
+  derecha: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  botonIcono: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.sm,
   },
-  opcionActiva: {
-    backgroundColor: colors.brand,
-    borderColor: colors.brand,
-    color: colors.textOnBrand,
-    fontWeight: '600',
-  },
-  codigoTitulo: { ...typography.heading, color: colors.text, textAlign: 'center' },
-  qrCaja: {
-    alignSelf: 'center',
-    padding: spacing.lg,
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.md,
-  },
-  codigoTexto: {
-    ...typography.title,
-    color: colors.text,
-    textAlign: 'center',
-    letterSpacing: 2,
-  },
-  codigoPie: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
+  centro: { textAlign: 'center' },
+  qr: { alignSelf: 'center', padding: spacing.lg, backgroundColor: '#FFFFFF', borderRadius: radius.md },
+  codigo: { textAlign: 'center', letterSpacing: 2 },
+  separado: { paddingTop: spacing.sm },
+  acciones: { gap: spacing.xs, paddingTop: spacing.sm },
+  nota: { paddingVertical: spacing.md },
 });
