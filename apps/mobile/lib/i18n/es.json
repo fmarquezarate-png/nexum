@@ -134,7 +134,10 @@
     "borrarTexto": "Esto no se puede deshacer. Se borrará todo lo que hay dentro.",
     "borrarSegunda": "¿De verdad? No hay forma de recuperarlo.",
     "borrarConfirmar": "Sí, borrar para siempre",
-    "soloOwnerBorra": "Solo quien creó la casa puede borrarla."
+    "soloOwnerBorra": "Solo quien creó la casa puede borrarla.",
+    "selectorTitulo": "Tus casas",
+    "selectorEtiqueta": "Casa activa: {{casa}}. Toca para cambiar.",
+    "gestionar": "Gestionar mis casas"
   },
   "roles": {
     "owner": "Propietario",
@@ -319,7 +322,10 @@
   "estadisticas": {
     "titulo": "Estadísticas",
     "vacioTitulo": "Aquí verás cómo va tu casa",
-    "vacioTexto": "En cuanto lleve unos días funcionando, aparecerán el consumo y el clima."
+    "vacioTexto": "En cuanto lleve unos días funcionando, aparecerán el consumo y el clima.",
+    "dispositivosPie": "dispositivos en {{casa}}",
+    "sinDatosTitulo": "Todavía no hay nada que medir",
+    "sinDatosTexto": "Cuando tu casa lleve unos días con aparatos conectados, aquí verás el consumo y el clima."
   },
   "modulo": {
     "avisoLlegada": "Te avisaremos en cuanto esté lista.",

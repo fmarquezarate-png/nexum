@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from '@/core/auth';
+import { CasaActivaProvider } from '@/core/homes';
 import { ThemeProvider, ToastProvider, useTheme } from '@/ui';
 
 /**
@@ -16,11 +17,13 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <SafeAreaProvider>
-          <ToastProvider>
-            <Navegacion />
-          </ToastProvider>
-        </SafeAreaProvider>
+        <CasaActivaProvider>
+          <SafeAreaProvider>
+            <ToastProvider>
+              <Navegacion />
+            </ToastProvider>
+          </SafeAreaProvider>
+        </CasaActivaProvider>
       </AuthProvider>
     </ThemeProvider>
   );

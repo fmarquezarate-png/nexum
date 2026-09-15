@@ -1,9 +1,9 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
 import { House, Plus } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { crearCasa, listarCasas, type CasaConRol } from '@/core/homes';
+import { crearCasa, useCasaActiva } from '@/core/homes';
 import { mensajeDe } from '@/lib/errores';
 import { t } from '@/lib/i18n';
 import {
@@ -12,10 +12,11 @@ import {
   Card,
   Divider,
   EmptyState,
+  Entrada,
   ErrorState,
+  EsqueletoLista,
   IconTile,
   ListRow,
-  Loading,
   Screen,
   TextField,
   spacing,
@@ -23,28 +24,20 @@ import {
   useTheme,
 } from '@/ui';
 
-type Estado =
-  | { tipo: 'cargando' }
-  | { tipo: 'listo'; casas: CasaConRol[] }
-  | { tipo: 'error'; motivo: string };
-
+/**
+ * Mis casas.
+ *
+ * Lee la lista del provider y no del servidor: crear o borrar una casa
+ * aquí tiene que notarse al instante en el selector de Inicio, y eso
+ * solo pasa si hay una sola lista para toda la app.
+ */
 export default function CasasScreen() {
   const { colors } = useTheme();
   const { avisarExito, avisarAviso } = useAviso();
-  const [estado, setEstado] = useState<Estado>({ tipo: 'cargando' });
+  const { casas, cargando, error, recargar } = useCasaActiva();
   const [creando, setCreando] = useState(false);
   const [nombre, setNombre] = useState('');
   const [guardando, setGuardando] = useState(false);
-
-  const cargar = useCallback(() => {
-    listarCasas()
-      .then((casas) => setEstado({ tipo: 'listo', casas }))
-      .catch((fallo) => setEstado({ tipo: 'error', motivo: mensajeDe(fallo) }));
-  }, []);
-
-  // Recarga al volver: si acabas de salirte de una casa o de borrarla,
-  // la lista tiene que reflejarlo.
-  useFocusEffect(cargar);
 
   async function guardar() {
     if (!nombre.trim()) return;
@@ -54,30 +47,38 @@ export default function CasasScreen() {
       setNombre('');
       setCreando(false);
       avisarExito(t('casas.creada'));
-      cargar();
-    } catch {
-      avisarAviso(t('errores.generico'));
+      recargar();
+    } catch (fallo) {
+      // El mensaje real del servidor, no un "algo ha fallado": esconder
+      // el error de PostgREST nos costó horas la última vez.
+      avisarAviso(mensajeDe(fallo));
     } finally {
       setGuardando(false);
     }
   }
 
-  if (estado.tipo === 'cargando') return <Screen><Loading /></Screen>;
-
-  if (estado.tipo === 'error') {
+  if (cargando) {
     return (
-      <Screen>
+      <Screen title={t('casas.titulo')}>
+        <EsqueletoLista filas={2} />
+      </Screen>
+    );
+  }
+
+  if (error) {
+    return (
+      <Screen title={t('casas.titulo')}>
         <ErrorState
           titulo={t('errores.cargar')}
           detalle={t('errores.cargarDetalle')}
-          tecnico={estado.motivo}
-          onReintentar={cargar}
+          tecnico={error}
+          onReintentar={recargar}
         />
       </Screen>
     );
   }
 
-  const vacia = estado.casas.length === 0;
+  const vacia = casas.length === 0;
 
   return (
     <Screen title={t('casas.titulo')}>
@@ -91,24 +92,26 @@ export default function CasasScreen() {
       ) : null}
 
       {!vacia ? (
-        <Card>
-          {estado.casas.map((casa, i) => (
-            <View key={casa.id}>
-              {i > 0 && <Divider />}
-              <ListRow
-                titulo={casa.name}
-                subtitulo={casa.timezone}
-                izquierda={
-                  <IconTile>
-                    <House size={20} strokeWidth={1.75} color={colors.brand} />
-                  </IconTile>
-                }
-                derecha={<Badge texto={t(`roles.${casa.mi_rol}`)} />}
-                onPress={() => router.push(`/casas/${casa.id}`)}
-              />
-            </View>
-          ))}
-        </Card>
+        <Entrada>
+          <Card>
+            {casas.map((casa, i) => (
+              <View key={casa.id}>
+                {i > 0 && <Divider />}
+                <ListRow
+                  titulo={casa.name}
+                  subtitulo={casa.timezone}
+                  izquierda={
+                    <IconTile>
+                      <House size={20} strokeWidth={1.75} color={colors.brand} />
+                    </IconTile>
+                  }
+                  derecha={<Badge texto={t(`roles.${casa.mi_rol}`)} />}
+                  onPress={() => router.push(`/casas/${casa.id}`)}
+                />
+              </View>
+            ))}
+          </Card>
+        </Entrada>
       ) : null}
 
       {creando ? (

@@ -1,82 +1,57 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
 import { Plus } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { listarCasas, type CasaConRol } from '@/core/homes';
-import { mensajeDe } from '@/lib/errores';
+import { SelectorCasa, useCasaActiva } from '@/core/homes';
 import { t } from '@/lib/i18n';
-import {
-  Button,
-  EmptyState,
-  ErrorState,
-  Loading,
-  PressableAnimado,
-  Screen,
-  layout,
-  radius,
-  spacing,
-  typography,
-  useTheme,
-  usePressScale,
-} from '@/ui';
-
-type Estado =
-  | { tipo: 'cargando' }
-  | { tipo: 'listo'; casas: CasaConRol[] }
-  | { tipo: 'error'; motivo: string };
+import { Button, EmptyState, ErrorState, EsqueletoLista, Screen, spacing } from '@/ui';
 
 /**
- * Dispositivos, agrupados por casa y habitación.
+ * Dispositivos de la casa activa.
+ *
+ * La casa la manda el provider, igual que en Inicio: aquí no se elige
+ * una casa "para esta pantalla". El selector es el mismo control y
+ * cambia la casa de toda la app.
  *
  * La lista de aparatos llega en la fase 2: hasta que se pueda emparejar
  * un ESP32 siempre estará vacía, y eso hay que decirlo sin que parezca
  * un fallo.
  */
 export default function DevicesScreen() {
-  const [estado, setEstado] = useState<Estado>({ tipo: 'cargando' });
-  const [activa, setActiva] = useState<string | null>(null);
+  const { casas, activa, cargando, error, recargar } = useCasaActiva();
 
-  const cargar = useCallback(() => {
-    listarCasas()
-      .then((casas) => {
-        setEstado({ tipo: 'listo', casas });
-        setActiva((prev) => prev ?? casas[0]?.id ?? null);
-      })
-      .catch((fallo) => setEstado({ tipo: 'error', motivo: mensajeDe(fallo) }));
-  }, []);
-
-  useFocusEffect(cargar);
-
-  if (estado.tipo === 'cargando') {
+  if (cargando) {
     return (
       <Screen title={t('tabs.devices')}>
-        <Loading />
+        <EsqueletoLista filas={3} />
       </Screen>
     );
   }
 
-  if (estado.tipo === 'error') {
+  if (error) {
     return (
       <Screen title={t('tabs.devices')}>
         <ErrorState
           titulo={t('errores.cargar')}
           detalle={t('errores.cargarDetalle')}
-          tecnico={estado.motivo}
-          onReintentar={cargar}
+          tecnico={error}
+          onReintentar={recargar}
         />
       </Screen>
     );
   }
 
-  if (estado.casas.length === 0) {
+  if (casas.length === 0 || !activa) {
     return (
       <Screen title={t('tabs.devices')}>
         <EmptyState
           quien="nexi"
           titulo={t('casas.vaciaTitulo')}
           descripcion={t('casas.vaciaTexto')}
-          accion={{ label: t('casas.crear'), onPress: () => router.push('/casas') }}
+          accion={{
+            label: t('casas.crear'),
+            onPress: () => router.push('/casas'),
+          }}
         />
       </Screen>
     );
@@ -84,22 +59,9 @@ export default function DevicesScreen() {
 
   return (
     <Screen title={t('tabs.devices')}>
-      {estado.casas.length > 1 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.selector}
-        >
-          {estado.casas.map((c) => (
-            <Pastilla
-              key={c.id}
-              texto={c.name}
-              activa={c.id === activa}
-              onPress={() => setActiva(c.id)}
-            />
-          ))}
-        </ScrollView>
-      ) : null}
+      <View style={styles.selector}>
+        <SelectorCasa />
+      </View>
 
       <EmptyState
         quien="nexi"
@@ -117,54 +79,6 @@ export default function DevicesScreen() {
   );
 }
 
-function Pastilla({
-  texto,
-  activa,
-  onPress,
-}: {
-  texto: string;
-  activa: boolean;
-  onPress: () => void;
-}) {
-  const { colors, shadow } = useTheme();
-  const { animatedStyle, onPressIn, onPressOut } = usePressScale();
-
-  return (
-    <PressableAnimado
-      onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
-      accessibilityRole="tab"
-      accessibilityState={{ selected: activa }}
-      style={[
-        styles.pastilla,
-        {
-          backgroundColor: activa ? colors.brandFill : colors.surface,
-          borderColor: activa ? colors.brandFill : colors.borderStrong,
-        },
-        !activa && shadow.subtle,
-        animatedStyle,
-      ]}
-    >
-      <Text
-        style={[
-          typography.captionStrong,
-          { color: activa ? colors.textOnFill : colors.textSecondary },
-        ]}
-      >
-        {texto}
-      </Text>
-    </PressableAnimado>
-  );
-}
-
 const styles = StyleSheet.create({
-  selector: { gap: spacing.sm, paddingVertical: spacing.xs, paddingRight: layout.screenPaddingH },
-  pastilla: {
-    minHeight: layout.hitTarget,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
+  selector: { paddingBottom: spacing.xs },
 });

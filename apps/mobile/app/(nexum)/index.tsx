@@ -1,10 +1,10 @@
 import { router, useFocusEffect } from 'expo-router';
-import { ChevronDown, Lightbulb, Plus, ShieldCheck, Sparkles, Zap } from 'lucide-react-native';
+import { Lightbulb, Plus, ShieldCheck, Sparkles, Zap } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '@/core/auth';
-import { listarCasas, type CasaConRol } from '@/core/homes';
+import { SelectorCasa, useCasaActiva } from '@/core/homes';
 import { MODULOS } from '@/modules/registry';
 import type { ModuleManifest, ResumenModulo } from '@/modules/tipos';
 import { mensajeDe } from '@/lib/errores';
@@ -13,9 +13,10 @@ import {
   Badge,
   Card,
   EmptyState,
+  Entrada,
   ErrorState,
+  EsqueletoTarjetas,
   IconTile,
-  Loading,
   Screen,
   layout,
   radius,
@@ -29,7 +30,7 @@ const LOGO = require('../../assets/marcas/nexum-completo.png');
 
 type Estado =
   | { tipo: 'cargando' }
-  | { tipo: 'listo'; casas: CasaConRol[]; resumenes: { m: ModuleManifest; r: ResumenModulo }[] }
+  | { tipo: 'listo'; resumenes: { m: ModuleManifest; r: ResumenModulo }[] }
   | { tipo: 'error'; motivo: string };
 
 /**
@@ -46,35 +47,39 @@ type Estado =
 export default function InicioScreen() {
   const { perfil } = useAuth();
   const { colors } = useTheme();
+  // La casa activa la manda el provider, no esta pantalla: cambiarla en
+  // la hoja tiene que notarse en Dispositivos y en Estadísticas también.
+  const { activa, cargando: cargandoCasas, error: errorCasas, recargar } = useCasaActiva();
   const [estado, setEstado] = useState<Estado>({ tipo: 'cargando' });
 
   const cargar = useCallback(() => {
-    listarCasas()
-      .then(async (casas) => {
-        const activa = casas[0];
-        if (!activa) return setEstado({ tipo: 'listo', casas, resumenes: [] });
+    if (cargandoCasas) return;
+    if (!activa) return setEstado({ tipo: 'listo', resumenes: [] });
 
-        // Cada módulo decide si tiene algo que contar. Si devuelve null,
-        // Nexum no dibuja NADA suyo: ni tarjeta, ni color, ni mascota.
-        const resumenes = (
-          await Promise.all(
-            MODULOS.map(async (m) => {
-              const r = await m.resumenDeHogar(activa.id).catch(() => null);
-              return r ? { m, r } : null;
-            }),
-          )
-        ).filter((x): x is { m: ModuleManifest; r: ResumenModulo } => x !== null);
-
-        setEstado({ tipo: 'listo', casas, resumenes });
-      })
+    // Cada módulo decide si tiene algo que contar. Si devuelve null,
+    // Nexum no dibuja NADA suyo: ni tarjeta, ni color, ni mascota.
+    Promise.all(
+      MODULOS.map(async (m) => {
+        const r = await m.resumenDeHogar(activa.id).catch(() => null);
+        return r ? { m, r } : null;
+      }),
+    )
+      .then((todos) =>
+        setEstado({
+          tipo: 'listo',
+          resumenes: todos.filter((x): x is { m: ModuleManifest; r: ResumenModulo } => x !== null),
+        }),
+      )
       .catch((fallo) => setEstado({ tipo: 'error', motivo: mensajeDe(fallo) }));
-  }, []);
+  }, [activa, cargandoCasas]);
 
   useFocusEffect(cargar);
 
   const nombre = perfil?.display_name?.split(' ')[0];
-  const casaActiva = estado.tipo === 'listo' ? estado.casas[0] : undefined;
-  const variasCasas = estado.tipo === 'listo' && estado.casas.length > 1;
+  const cargando = cargandoCasas || estado.tipo === 'cargando';
+  // El fallo de las casas manda sobre el de los módulos: sin casa activa
+  // no hay contexto en el que un resumen signifique nada.
+  const motivoError = errorCasas ?? (estado.tipo === 'error' ? estado.motivo : null);
 
   return (
     <Screen>
@@ -99,43 +104,35 @@ export default function InicioScreen() {
           {nombre ? t('inicio.saludo', { name: nombre }) : t('inicio.sinNombre')}
         </Text>
 
-        {casaActiva ? (
-          <Pressable
-            onPress={variasCasas ? () => router.push('/casas') : undefined}
-            accessibilityRole={variasCasas ? 'button' : 'text'}
-            style={styles.selectorCasa}
-          >
-            <Text style={[typography.body, { color: colors.textSecondary }]}>
-              {casaActiva.name}
-            </Text>
-            {/* Con una sola casa se muestra igual pero sin chevron: así se
-                aprende dónde vive la casa activa antes de tener dos. */}
-            {variasCasas ? (
-              <ChevronDown size={16} strokeWidth={1.75} color={colors.textSecondary} />
-            ) : null}
-          </Pressable>
-        ) : null}
+        <SelectorCasa />
       </View>
 
-      {estado.tipo === 'cargando' ? <Loading /> : null}
+      {/* Esqueleto y no ruedecita: se enseña la forma de las tarjetas que
+          van a llegar, así nada salta de sitio cuando llegan. */}
+      {cargando ? <EsqueletoTarjetas cuantas={2} /> : null}
 
-      {estado.tipo === 'error' ? (
+      {!cargando && motivoError ? (
         <ErrorState
           titulo={t('errores.cargar')}
           detalle={t('errores.cargarDetalle')}
-          tecnico={estado.motivo}
-          onReintentar={cargar}
+          tecnico={motivoError}
+          onReintentar={() => {
+            recargar();
+            cargar();
+          }}
         />
       ) : null}
 
-      {estado.tipo === 'listo' ? (
+      {!cargando && !motivoError && estado.tipo === 'listo' ? (
         <>
           {/* ── 3 · Mis dispositivos ─────────────────────────────── */}
           {estado.resumenes.length > 0 ? (
             <>
               <Seccion titulo={t('inicio.misDispositivos')} />
-              {estado.resumenes.map(({ m, r }) => (
-                <TarjetaModulo key={m.id} modulo={m} resumen={r} />
+              {estado.resumenes.map(({ m, r }, i) => (
+                <Entrada key={m.id} indice={i}>
+                  <TarjetaModulo modulo={m} resumen={r} />
+                </Entrada>
               ))}
             </>
           ) : (
@@ -156,8 +153,12 @@ export default function InicioScreen() {
             accion={{ onPress: () => router.push('/anadir-dispositivo') }}
           />
           <View style={styles.rejilla}>
-            {MODULOS.map((m) => (
-              <TarjetaApp key={m.id} modulo={m} />
+            {MODULOS.map((m, i) => (
+              // El escalonado no se reinicia por sección: las apps siguen
+              // contando desde donde lo dejaron los resúmenes de arriba.
+              <Entrada key={m.id} indice={estado.resumenes.length + i} style={styles.mitad}>
+                <TarjetaApp modulo={m} />
+              </Entrada>
             ))}
           </View>
 
@@ -245,21 +246,16 @@ function TarjetaApp({ modulo }: { modulo: ModuleManifest }) {
   const proximo = modulo.estado === 'proximamente';
 
   return (
-    <View style={styles.mitad}>
-      <Card
-        compacta
-        onPress={() => router.push(proximo ? `/modulo/${modulo.id}` : modulo.ruta)}
-      >
-        <IconTile tamano={56} fondo={acento.soft}>
-          <Image source={modulo.logo} style={styles.logoApp} resizeMode="contain" />
-        </IconTile>
-        <Text style={[typography.cardTitle, { color: colors.text }]}>{modulo.nombre}</Text>
-        <Text style={[typography.caption, { color: colors.textSecondary }]} numberOfLines={2}>
-          {modulo.tagline}
-        </Text>
-        {proximo ? <Badge texto={t('inicio.pronto')} /> : null}
-      </Card>
-    </View>
+    <Card compacta onPress={() => router.push(proximo ? `/modulo/${modulo.id}` : modulo.ruta)}>
+      <IconTile tamano={56} fondo={acento.soft}>
+        <Image source={modulo.logo} style={styles.logoApp} resizeMode="contain" />
+      </IconTile>
+      <Text style={[typography.cardTitle, { color: colors.text }]}>{modulo.nombre}</Text>
+      <Text style={[typography.caption, { color: colors.textSecondary }]} numberOfLines={2}>
+        {modulo.tagline}
+      </Text>
+      {proximo ? <Badge texto={t('inicio.pronto')} /> : null}
+    </Card>
   );
 }
 
@@ -308,18 +304,33 @@ function TarjetaFutura({
 }
 
 const styles = StyleSheet.create({
-  cabecera: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  cabecera: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   logo: { width: 110, height: 28 },
-  avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   saludo: { gap: spacing.xxs, paddingTop: spacing.sm },
-  selectorCasa: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   seccion: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: layout.sectionGap - layout.cardGap,
   },
-  mas: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  mas: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   filaModulo: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   logoModulo: { width: 28, height: 28, borderRadius: 8 },
   logoApp: { width: 36, height: 36, borderRadius: 10 },
