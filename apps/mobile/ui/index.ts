@@ -14,6 +14,7 @@ export { Divider } from './Divider';
 export { IconTile } from './IconTile';
 export { ListRow, Badge } from './ListRow';
 export { SegmentedControl } from './SegmentedControl';
+export { BotonTema } from './BotonTema';
 export { PuertaNexum } from './PuertaNexum';
 export { MundoTabs } from './MundoTabs';
 export { VacioDeMundo } from './VacioDeMundo';

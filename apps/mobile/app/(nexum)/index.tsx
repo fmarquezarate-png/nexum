@@ -11,6 +11,7 @@ import { mensajeDe } from '@/lib/errores';
 import { t } from '@/lib/i18n';
 import {
   Badge,
+  BotonTema,
   Card,
   EmptyState,
   Entrada,
@@ -86,16 +87,19 @@ export default function InicioScreen() {
       {/* ── 0 · Cabecera ─────────────────────────────────────────── */}
       <View style={styles.cabecera}>
         <Image source={LOGO} style={styles.logo} resizeMode="contain" />
-        <Pressable
-          onPress={() => router.push('/perfil')}
-          accessibilityRole="button"
-          accessibilityLabel="Perfil"
-          style={[styles.avatar, { backgroundColor: colors.surfaceAccent }]}
-        >
-          <Text style={[typography.bodyStrong, { color: colors.brand }]}>
-            {(nombre ?? '?').charAt(0).toUpperCase()}
-          </Text>
-        </Pressable>
+        <View style={styles.acciones}>
+          <BotonTema />
+          <Pressable
+            onPress={() => router.push('/perfil')}
+            accessibilityRole="button"
+            accessibilityLabel="Perfil"
+            style={[styles.avatar, { backgroundColor: colors.surfaceAccent }]}
+          >
+            <Text style={[typography.bodyStrong, { color: colors.brand }]}>
+              {(nombre ?? '?').charAt(0).toUpperCase()}
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* ── 1 · Saludo y casa activa ─────────────────────────────── */}
@@ -310,10 +314,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   logo: { width: 110, height: 28 },
+  acciones: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: layout.avatar,
+    height: layout.avatar,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },

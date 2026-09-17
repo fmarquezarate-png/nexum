@@ -172,6 +172,18 @@ await pag.waitForTimeout(900);
 console.log('\n── Tras cambiar de casa ──');
 console.log(resumen(await pag.innerText('body')));
 
+// El botón de tema: pulsar tiene que cambiar el fondo de verdad.
+await pag.goto(URL_BASE, { waitUntil: 'networkidle' });
+await pag.waitForTimeout(1800);
+const fondoAntes = await pag.evaluate(() => getComputedStyle(document.body).backgroundColor);
+await pag.getByLabel(/Cambiar a modo/).first().click();
+await pag.waitForTimeout(900);
+const fondoDespues = await pag.evaluate(() => getComputedStyle(document.body).backgroundColor);
+console.log(`\n── Botón de tema ──`);
+console.log(`fondo antes: ${fondoAntes} → después: ${fondoDespues}`);
+if (fondoAntes === fondoDespues) errores.push('EL BOTÓN DE TEMA NO CAMBIA NADA');
+await foto('tema cambiado');
+
 console.log('\n── Errores ──');
 console.log(errores.length ? errores.slice(0, 20).join('\n') : 'ninguno');
 

@@ -263,6 +263,8 @@ export const layout = {
   rowHeightCompact: 48,
   /** Mínimo pulsable. Por debajo de 44 se falla al tocar. */
   hitTarget: 44,
+  /** Los círculos de la cabecera: avatar y botón de tema. Iguales. */
+  avatar: 40,
   /** Aire al final del scroll para no quedar bajo la barra de pestañas. */
   scrollBottom: 96,
   tabBarHeight: 56,

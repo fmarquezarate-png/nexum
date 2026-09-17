@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, useColorScheme } from 'react-native';
+import { AccessibilityInfo, Platform, useColorScheme } from 'react-native';
 
 import { configurarVibracion } from './haptics';
 import {
@@ -88,10 +88,33 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     configurarVibracion(vibracion);
   }, [vibracion]);
 
-  const valor = useMemo<Tema>(() => {
-    const scheme: Scheme =
-      preferencia === 'auto' ? (delSistema === 'dark' ? 'dark' : 'light') : preferencia;
+  const scheme: Scheme =
+    preferencia === 'auto' ? (delSistema === 'dark' ? 'dark' : 'light') : preferencia;
 
+  /**
+   * En web, el fondo de la PÁGINA no es el de la app.
+   *
+   * index.html pinta el body siguiendo el modo del sistema con una media
+   * query de CSS, y eso no sabe nada de lo que el usuario haya elegido
+   * dentro. Con el móvil en claro y la app en oscuro, el rebote del
+   * scroll y la barra del navegador se quedaban color crema.
+   *
+   * Aquí se le impone el color resuelto al body y a theme-color, que es
+   * lo que tiñe la barra del navegador al instalarla en el inicio.
+   */
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const fondo = (scheme === 'dark' ? darkColors : lightColors).canvas;
+    document.body.style.backgroundColor = fondo;
+    document.querySelectorAll('meta[name="theme-color"]').forEach((etiqueta) => {
+      etiqueta.setAttribute('content', fondo);
+      // La media query de la etiqueta la desactivaría en el modo
+      // contrario, así que se quita: ahora manda la app.
+      etiqueta.removeAttribute('media');
+    });
+  }, [scheme]);
+
+  const valor = useMemo<Tema>(() => {
     return {
       scheme,
       colors: scheme === 'dark' ? darkColors : lightColors,
@@ -108,7 +131,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         void AsyncStorage.setItem(CLAVE_VIBRACION, v ? '1' : '0').catch(() => {});
       },
     };
-  }, [preferencia, delSistema, reducido, vibracion]);
+  }, [scheme, preferencia, reducido, vibracion]);
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }
